@@ -3,43 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
 <title>🎨 Finger Paint — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
 body{height:100vh;display:flex;flex-direction:column;background:#fdf4ff;overflow:hidden;touch-action:none}
-.bar{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-wrap:wrap}
-.home{font-size:1.5rem;text-decoration:none}
-.dot{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.25);cursor:pointer}
+.bar{display:flex;align-items:center;gap:8px;padding:8px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-wrap:wrap}
+.home{font-size:1.5rem;text-decoration:none;min-width:44px;text-align:center}
+.dot{width:40px;height:40px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.25);cursor:pointer;display:inline-block;vertical-align:middle;margin:2px}
 .dot.sel{border-color:#111;transform:scale(1.15)}
-#clear,#rainbow{font-size:1rem;padding:8px 14px;border:none;border-radius:12px;background:#f3e8ff;cursor:pointer;font-weight:bold;color:#7c3aed}
+.tbtn{font-size:1.15rem;padding:8px 10px;border:none;border-radius:12px;background:#f3e8ff;cursor:pointer;font-weight:bold;color:#7c3aed;min-width:44px;min-height:44px}
+.tbtn.sel{background:#7c3aed;color:#fff}
+.stick{font-size:1.5rem;padding:4px 6px;border:none;border-radius:10px;background:transparent;cursor:pointer;min-width:42px;min-height:42px}
+.stick.sel{background:#fbbf24}
 canvas{flex:1;cursor:crosshair}
 </style>
 </head>
 <body>
 <div class="bar">
-<a class="home" href="index.html">🏠</a>
+<a class="home" href="index.html" aria-label="Home">🏠</a>
 <span id="dots"></span>
-<button id="rainbow">🌈 Rainbow</button>
-<button id="clear">🧽 Clear</button>
+<button class="tbtn" id="rainbow" aria-label="Rainbow brush">🌈</button>
+<button class="tbtn" id="eraser" aria-label="Eraser">🧽</button>
+<button class="tbtn" id="undo" aria-label="Undo">↩️</button>
+<button class="tbtn" id="redo" aria-label="Redo">↪️</button>
+<span id="sticks"></span>
+<button class="tbtn" id="save" aria-label="Save drawing">💾</button>
+<button class="tbtn" id="clear" aria-label="Clear all">🗑️</button>
 </div>
 <canvas id="c"></canvas>
+<script src="common.js"></script>
 <script>
 const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
-function fit(){canvas.width=canvas.clientWidth;canvas.height=canvas.clientHeight}
+function fit(){
+  const img=canvas.width?ctx.getImageData(0,0,canvas.width,canvas.height):null;
+  canvas.width=canvas.clientWidth;canvas.height=canvas.clientHeight;
+  if(img)ctx.putImageData(img,0,0);
+}
 window.addEventListener('resize',fit);
 const colors=["#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899","#78350f","#111827"];
-let color=colors[0],rainbow=false,hue=0,drawing=false,last=null;
+const stickers=["⭐","❤️","🌸","🦋","🐶","🌈","🎈","😀"];
+let color=colors[0],tool='brush',sticker=null,hue=0,drawing=false,last=null;
+let undoStack=[],redoStack=[];
+function snap(){
+  undoStack.push(canvas.toDataURL());
+  if(undoStack.length>25)undoStack.shift();
+  redoStack=[];
+}
+function restore(url){
+  const im=new Image();
+  im.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(im,0,0)};
+  im.src=url;
+}
+function selTool(t){
+  tool=t;sticker=null;
+  document.querySelectorAll('.tbtn,.stick').forEach(x=>x.classList.remove('sel'));
+  document.querySelectorAll('.dot').forEach(x=>x.classList.remove('sel'));
+  if(t==='rainbow')document.getElementById('rainbow').classList.add('sel');
+  if(t==='eraser')document.getElementById('eraser').classList.add('sel');
+}
 const dots=document.getElementById('dots');
-colors.forEach((c,i)=>{const d=document.createElement('span');d.className='dot'+(i===0?' sel':'');d.style.background=c;d.style.display='inline-block';
-d.onclick=()=>{color=c;rainbow=false;document.querySelectorAll('.dot').forEach(x=>x.classList.remove('sel'));d.classList.add('sel')};dots.appendChild(d)});
-document.getElementById('rainbow').onclick=()=>{rainbow=true;document.querySelectorAll('.dot').forEach(x=>x.classList.remove('sel'))};
-document.getElementById('clear').onclick=()=>ctx.clearRect(0,0,canvas.width,canvas.height);
+colors.forEach((c,i)=>{
+  const d=document.createElement('button');
+  d.className='dot'+(i===0?' sel':'');d.style.background=c;d.setAttribute('aria-label','Color '+c);
+  d.onclick=()=>{color=c;selTool('brush');d.classList.add('sel');playSfx('click')};
+  dots.appendChild(d);
+});
+document.getElementById('rainbow').onclick=()=>{selTool('rainbow');playSfx('click')};
+document.getElementById('eraser').onclick=()=>{selTool('eraser');playSfx('click')};
+const sticks=document.getElementById('sticks');
+stickers.forEach(s=>{
+  const b=document.createElement('button');b.className='stick';b.textContent=s;b.setAttribute('aria-label','Sticker '+s);
+  b.onclick=()=>{selTool('brush');tool='sticker';sticker=s;document.querySelectorAll('.stick').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');playSfx('click')};
+  sticks.appendChild(b);
+});
+document.getElementById('undo').onclick=()=>{
+  if(!undoStack.length)return;
+  redoStack.push(canvas.toDataURL());
+  restore(undoStack.pop());playSfx('click');
+};
+document.getElementById('redo').onclick=()=>{
+  if(!redoStack.length)return;
+  undoStack.push(canvas.toDataURL());
+  restore(redoStack.pop());playSfx('click');
+};
+document.getElementById('clear').onclick=()=>{snap();ctx.clearRect(0,0,canvas.width,canvas.height);playSfx('pop')};
+document.getElementById('save').onclick=()=>{
+  const a=document.createElement('a');
+  a.download=(kidName()||'my')+'-drawing.png';
+  const tmp=document.createElement('canvas');tmp.width=canvas.width;tmp.height=canvas.height;
+  const tc=tmp.getContext('2d');tc.fillStyle='#ffffff';tc.fillRect(0,0,tmp.width,tmp.height);tc.drawImage(canvas,0,0);
+  a.href=tmp.toDataURL('image/png');a.click();
+  playSfx('star');burstConfetti();say('Beautiful drawing, '+cheerName()+'! Saved it!');
+};
 function pos(e){const r=canvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top}}
-function start(e){drawing=true;last=pos(e)}
-function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);
-ctx.lineWidth=16;ctx.lineCap='round';
-ctx.strokeStyle=rainbow?`hsl(${(hue+=4)%360},90%,55%)`:color;
-ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p}
+function start(e){
+  const p=pos(e);snap();
+  if(tool==='sticker'&&sticker){
+    ctx.font='52px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(sticker,p.x,p.y);playSfx('pop');return;
+  }
+  drawing=true;last=p;
+}
+function move(e){
+  if(!drawing)return;e.preventDefault();
+  const p=pos(e);
+  ctx.lineCap='round';
+  if(tool==='eraser'){ctx.globalCompositeOperation='destination-out';ctx.lineWidth=30}
+  else{ctx.globalCompositeOperation='source-over';ctx.lineWidth=16;
+    ctx.strokeStyle=tool==='rainbow'?`hsl(${(hue+=4)%360},90%,55%)`:color}
+  ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;
+  ctx.globalCompositeOperation='source-over';
+}
 function end(){drawing=false}
 canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
 canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end);

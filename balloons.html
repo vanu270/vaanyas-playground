@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>🎈 Balloon Pop — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
@@ -35,7 +38,7 @@ function rise(now){const y=105-((now-start)/1000)*speed/3;
 if(y<-20){b.remove();return}b.style.top=y+'vh';
 if(!b.dead)requestAnimationFrame(rise)}
 requestAnimationFrame(rise);
-b.onclick=()=>{if(b.dead)return;b.dead=true;b.classList.add('boom');popped++;
+b.onclick=()=>{if(b.dead)return;b.dead=true;b.classList.add('boom');playSfx('pop');popped++;
 document.getElementById('count').textContent='Popped: '+popped;
 say(isNaN(ch)?ch:'Number '+ch);setTimeout(()=>b.remove(),320)}}
 setInterval(spawn,1400);spawn();spawn();

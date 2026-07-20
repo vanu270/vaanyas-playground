@@ -3,39 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
 <title>🔤 Letter Pops — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
-body{min-height:100vh;background:linear-gradient(135deg,#a5f3fc,#fbcfe8);display:flex;flex-direction:column;align-items:center;overflow:hidden}
+body{min-height:100vh;background:linear-gradient(135deg,#a5f3fc,#fbcfe8);display:flex;flex-direction:column;align-items:center}
 .home{position:fixed;top:12px;left:12px;font-size:1.6rem;text-decoration:none;background:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.15);z-index:10}
-h1{color:#0e7490;margin:16px 0 4px;font-size:1.6rem}
-.hint{color:#155e75;font-size:1rem;margin-bottom:8px}
-#stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer}
-#big{font-size:clamp(6rem,25vw,12rem);font-weight:bold;transition:transform .2s;line-height:1}
-#pic{font-size:clamp(4rem,18vw,7rem);line-height:1.2}
-#word{font-size:clamp(1.6rem,6vw,2.6rem);color:#0e7490;font-weight:bold}
+h1{color:#0e7490;margin:14px 0 8px;font-size:1.6rem}
+.tabs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.tabs button{font-size:1rem;font-weight:bold;padding:10px 16px;border:none;border-radius:14px;background:#fff;color:#0e7490;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px}
+.tabs button.on{background:#0e7490;color:#fff}
+#stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:10px;min-height:340px}
+#prompt{font-size:1.5rem;color:#0e7490;font-weight:bold;text-align:center;margin-bottom:14px;min-height:2.2rem}
+#bigwrap{text-align:center}
+#big{font-size:clamp(6rem,22vw,10rem);font-weight:bold;line-height:1}
+#pic{font-size:clamp(4rem,16vw,6rem);line-height:1.2}
+#word{font-size:clamp(1.4rem,5vw,2.2rem);color:#0e7490;font-weight:bold}
+.choices{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.choices button{font-size:2.6rem;font-weight:bold;width:92px;height:92px;border:none;border-radius:22px;background:#fff;color:#0e7490;box-shadow:0 6px 0 rgba(0,0,0,.15);cursor:pointer}
+.choices button:active{transform:translateY(3px)}
+.choices button.right{background:#22c55e;color:#fff}
+.choices button.wrong{background:#fca5a5;animation:shake .4s}
+.choices button:disabled{opacity:.45}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .pop{animation:pop .4s ease}
 @keyframes pop{0%{transform:scale(.3) rotate(-10deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1)}}
+#blanks{font-size:3rem;font-weight:bold;color:#0e7490;letter-spacing:14px;margin:8px 0 18px}
 #abc{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px;max-width:900px}
-#abc button{font-size:1.3rem;font-weight:bold;width:44px;height:44px;border:none;border-radius:12px;background:#fff;color:#0e7490;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer}
-#abc button:active{transform:translateY(2px)}
+#abc button{font-size:1.3rem;font-weight:bold;width:46px;height:46px;border:none;border-radius:12px;background:#fff;color:#0e7490;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer}
+#score{color:#155e75;font-size:1.05rem;margin-bottom:8px}
 </style>
 </head>
 <body>
-<a class="home" href="index.html">🏠</a>
+<a class="home" href="index.html" aria-label="Home">🏠</a>
 <h1>🔤 Letter Pops</h1>
-<p class="hint">Press any letter key — or tap a letter below!</p>
-<div id="stage"><div id="big">A</div><div id="pic">🍎</div><div id="word">A is for Apple</div></div>
+<div class="tabs" role="tablist">
+<button id="t0" class="on">🎪 Free Play</button>
+<button id="t1">😊 Easy</button>
+<button id="t2">🤔 Medium</button>
+<button id="t3">🦸 Hard</button>
+</div>
+<div id="score">⭐ Stars: 0</div>
+<div id="stage"></div>
 <div id="abc"></div>
 <script src="common.js"></script>
 <script>
 const words={A:["Apple","🍎"],B:["Ball","⚽"],C:["Cat","🐱"],D:["Dog","🐶"],E:["Elephant","🐘"],F:["Fish","🐟"],G:["Grapes","🍇"],H:["Hat","🎩"],I:["Ice cream","🍦"],J:["Juice","🧃"],K:["Kite","🪁"],L:["Lion","🦁"],M:["Moon","🌙"],N:["Nest","🪺"],O:["Orange","🍊"],P:["Penguin","🐧"],Q:["Queen","👑"],R:["Rainbow","🌈"],S:["Sun","☀️"],T:["Train","🚂"],U:["Umbrella","☂️"],V:["Violin","🎻"],W:["Whale","🐳"],X:["Xylophone","🎼"],Y:["Yo-yo","🪀"],Z:["Zebra","🦓"]};
+const spellWords=[["CAT","🐱"],["DOG","🐶"],["SUN","☀️"],["HAT","🎩"],["PIG","🐷"],["COW","🐮"],["BEE","🐝"],["FOX","🦊"],["BUS","🚌"],["STAR","⭐"],["BALL","⚽"],["FISH","🐟"]];
 const colors=["#e11d48","#ea580c","#ca8a04","#16a34a","#0891b2","#7c3aed","#db2777"];
-function show(L){const[w,e]=words[L];const big=document.getElementById('big');big.textContent=L;big.style.color=colors[Math.floor(Math.random()*colors.length)];document.getElementById('pic').textContent=e;document.getElementById('word').textContent=L+" is for "+w;[big,document.getElementById('pic')].forEach(el=>{el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')});say(L+"! "+L+" is for "+w)}
-document.addEventListener('keydown',ev=>{const k=ev.key.toUpperCase();if(words[k])show(k)});
+const L=Object.keys(words);
+let mode=0,stars=0;
+const stage=document.getElementById('stage'),prompt_=null;
+function pk(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+function addStar(){stars++;document.getElementById('score').textContent='⭐ Stars: '+stars;playSfx('star')}
+function win(msg){playSfx('correct');burstConfetti();addStar();say(msg)}
+// ----- Free play -----
+function freePlay(){
+  stage.innerHTML='<div id="prompt">Press any letter key — or tap a letter below!</div><div id="bigwrap"><div id="big">A</div><div id="pic">🍎</div><div id="word">A is for Apple</div></div>';
+  document.getElementById('abc').style.display='flex';
+}
+function show(k){
+  if(mode!==0)return;
+  const[w,e]=words[k];
+  const big=document.getElementById('big');
+  big.textContent=k;big.style.color=pk(colors);
+  document.getElementById('pic').textContent=e;
+  document.getElementById('word').textContent=k+" is for "+w;
+  [big,document.getElementById('pic')].forEach(el=>{el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')});
+  playSfx('click');say(k+"! "+k+" is for "+w);
+}
+// ----- Easy: Find A -----
+function easy(){
+  document.getElementById('abc').style.display='none';
+  const target=pk(L);
+  const opts=shuffle([target,...shuffle(L.filter(x=>x!==target)).slice(0,3)]);
+  stage.innerHTML='<div id="prompt">Find the letter <b>'+target+'</b>!</div><div class="choices" id="ch"></div>';
+  say('Find the letter '+target+'!');
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.textContent=o;
+    b.onclick=()=>{
+      if(o===target){b.classList.add('right');win('Yes! That is '+target+'! Great job, '+cheerName()+'!');setTimeout(easy,1900)}
+      else{b.classList.add('wrong');b.disabled=true;playSfx('wrong');say('That is '+o+'. Find '+target+'!')}
+    };
+    document.getElementById('ch').appendChild(b);
+  });
+}
+// ----- Medium: first letter of Apple -----
+function medium(){
+  document.getElementById('abc').style.display='none';
+  const target=pk(L);const[w,e]=words[target];
+  const opts=shuffle([target,...shuffle(L.filter(x=>x!==target)).slice(0,3)]);
+  stage.innerHTML='<div id="prompt">Which letter does <b>'+w+'</b> start with?</div><div id="pic" style="font-size:5rem">'+e+'</div><div style="font-size:1.6rem;color:#0e7490;font-weight:bold;margin-bottom:14px">'+w+'</div><div class="choices" id="ch"></div>';
+  say('Which letter does '+w+' start with?');
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.textContent=o;
+    b.onclick=()=>{
+      if(o===target){b.classList.add('right');win(w+' starts with '+target+'! Amazing, '+cheerName()+'!');setTimeout(medium,2100)}
+      else{b.classList.add('wrong');b.disabled=true;playSfx('wrong');say('Try again! '+w+'... '+w+'...')}
+    };
+    document.getElementById('ch').appendChild(b);
+  });
+}
+// ----- Hard: spell CAT -----
+function hard(){
+  document.getElementById('abc').style.display='none';
+  const[w,e]=pk(spellWords);
+  let pos=0;
+  const bank=shuffle([...w.split(''),...shuffle(L.filter(x=>!w.includes(x))).slice(0,Math.max(2,6-w.length))]);
+  stage.innerHTML='<div id="prompt">Spell <b>'+w+'</b>!</div><div id="pic" style="font-size:5rem">'+e+'</div><div id="blanks"></div><div class="choices" id="ch"></div>';
+  say('Can you spell '+w+'? '+w.split('').join(', ')+' spells '+w+'!');
+  function drawBlanks(){document.getElementById('blanks').textContent=w.split('').map((c,i)=>i<pos?c:'_').join(' ')}
+  drawBlanks();
+  bank.forEach(o=>{
+    const b=document.createElement('button');b.textContent=o;
+    b.onclick=()=>{
+      if(o===w[pos]){
+        playSfx('click');say(o);pos++;drawBlanks();b.disabled=true;
+        if(pos===w.length){win('You spelled '+w+'! '+w.split('').join(', ')+', '+w+'! Super speller, '+cheerName()+'!');setTimeout(hard,2600)}
+      }else{b.classList.add('wrong');playSfx('wrong');setTimeout(()=>b.classList.remove('wrong'),450);say('We need '+w[pos])}
+    };
+    document.getElementById('ch').appendChild(b);
+  });
+}
+// ----- tabs & keys -----
+const modes=[freePlay,easy,medium,hard];
+[0,1,2,3].forEach(i=>{
+  document.getElementById('t'+i).onclick=()=>{
+    mode=i;
+    [0,1,2,3].forEach(j=>document.getElementById('t'+j).classList.toggle('on',j===i));
+    modes[i]();
+  };
+});
+document.addEventListener('keydown',ev=>{const k=ev.key.toUpperCase();if(mode===0&&words[k])show(k)});
 const abc=document.getElementById('abc');
-Object.keys(words).forEach(L=>{const b=document.createElement('button');b.textContent=L;b.onclick=()=>show(L);abc.appendChild(b)});
-document.getElementById('stage').onclick=()=>{const ks=Object.keys(words);show(ks[Math.floor(Math.random()*ks.length)])};
+L.forEach(k=>{const b=document.createElement('button');b.textContent=k;b.setAttribute('aria-label','Letter '+k);b.onclick=()=>show(k);abc.appendChild(b)});
+freePlay();
 </script>
 </body>
 </html>

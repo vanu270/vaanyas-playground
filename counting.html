@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>🔢 Count With Me — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
@@ -38,13 +41,13 @@ let answer=0,stars=0,tapped=0;
 function newRound(){tapped=0;answer=1+Math.floor(Math.random()*5);const t=things[Math.floor(Math.random()*things.length)];
 const items=document.getElementById('items');items.innerHTML='';
 for(let i=0;i<answer;i++){const s=document.createElement('span');s.textContent=t;s.style.animationDelay=(i*.15)+'s';
-s.onclick=()=>{if(!s.classList.contains('counted')){s.classList.add('counted');tapped++;say(String(tapped))}};items.appendChild(s)}
+s.onclick=()=>{if(!s.classList.contains('counted')){s.classList.add('counted');tapped++;playSfx('click');say(String(tapped))}};items.appendChild(s)}
 const opts=document.getElementById('opts');opts.innerHTML='';
 const set=new Set([answer]);while(set.size<3)set.add(1+Math.floor(Math.random()*6));
 [...set].sort(()=>Math.random()-.5).forEach(n=>{const b=document.createElement('button');b.textContent=n;
-b.onclick=()=>{if(n===answer){b.classList.add('right');stars++;document.getElementById('score').textContent='⭐ Stars: '+stars;
+b.onclick=()=>{if(n===answer){b.classList.add('right');stars++;document.getElementById('score').textContent='⭐ Stars: '+stars;playSfx('correct');burstConfetti();
 document.getElementById('msg').textContent='🎉 Yes! '+answer+'! Great counting!';say('Yes! '+answer+'! Great counting, '+cheerName()+'!');
-setTimeout(newRound,1800)}else{b.classList.add('wrong');document.getElementById('msg').textContent='Try counting again!';say('Oops, try counting again!')}};
+setTimeout(newRound,1800)}else{playSfx('wrong');b.classList.add('wrong');document.getElementById('msg').textContent='Try counting again!';say('Oops, try counting again!')}};
 opts.appendChild(b)});
 document.getElementById('msg').textContent='How many do you see? Tap each one to count!'}
 newRound();

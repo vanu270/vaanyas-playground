@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>🔺 Shape Hunt — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
@@ -43,9 +46,9 @@ say('Find the '+target.c+' '+target.s+'!');
 const board=document.getElementById('board');board.innerHTML='';
 cells.forEach(cell=>{const d=document.createElement('div');d.className='shape';
 d.innerHTML='<svg width="120" height="120" viewBox="0 0 120 120">'+shapes[cell.s].replace('COL',colors[cell.c])+'</svg>';
-d.onclick=()=>{if(cell.s===target.s&&cell.c===target.c){d.classList.add('right');stars++;
+d.onclick=()=>{if(cell.s===target.s&&cell.c===target.c){d.classList.add('right');stars++;playSfx('correct');burstConfetti();
 document.getElementById('score').textContent='⭐ Stars: '+stars;say('Yay '+cheerName()+'! You found the '+target.c+' '+target.s+'!');
-setTimeout(newRound,1500)}else{d.classList.add('wrong');say('That is a '+cell.c+' '+cell.s+'. Try again!');
+setTimeout(newRound,1500)}else{d.classList.add('wrong');playSfx('wrong');say('That is a '+cell.c+' '+cell.s+'. Try again!');
 setTimeout(()=>d.classList.remove('wrong'),500)}};
 board.appendChild(d)})}
 newRound();

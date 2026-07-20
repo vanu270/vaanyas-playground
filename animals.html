@@ -3,39 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
 <title>🦁 Animal Friends — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
-body{min-height:100vh;background:linear-gradient(135deg,#d9f99d,#a5f3fc);
-display:flex;flex-direction:column;align-items:center;padding:16px}
+body{min-height:100vh;background:linear-gradient(135deg,#d9f99d,#a5f3fc);display:flex;flex-direction:column;align-items:center;padding:16px}
 .home{position:fixed;top:12px;left:12px;font-size:1.6rem;text-decoration:none;background:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.15);z-index:10}
 h1{color:#3f6212;margin:10px 0;font-size:1.6rem}
-.hint{color:#4d7c0f;margin-bottom:16px}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tabs button{font-size:1rem;font-weight:bold;padding:10px 16px;border:none;border-radius:14px;background:#fff;color:#3f6212;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px}
+.tabs button.on{background:#4d7c0f;color:#fff}
+#prompt{font-size:1.4rem;color:#3f6212;font-weight:bold;min-height:2rem;margin-bottom:12px;text-align:center}
 #zoo{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:16px;max-width:700px;width:100%}
-.animal{background:#fff;border-radius:22px;padding:16px 8px;text-align:center;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.12);transition:transform .15s}
+#zoo.quiz{grid-template-columns:repeat(2,150px);justify-content:center}
+.animal{background:#fff;border-radius:22px;padding:16px 8px;text-align:center;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.12);transition:transform .15s;border:4px solid transparent}
 .animal:hover{transform:scale(1.08)}
 .animal .face{font-size:3.4rem}
 .animal .nm{font-weight:bold;color:#3f6212;margin-top:6px}
+.animal.right{border-color:#22c55e;background:#dcfce7}
+.animal.wrong{border-color:#ef4444;animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 .talking{animation:wiggle .6s}
 @keyframes wiggle{25%{transform:rotate(-8deg) scale(1.15)}75%{transform:rotate(8deg) scale(1.15)}}
-#caption{margin-top:20px;font-size:1.5rem;color:#3f6212;font-weight:bold;min-height:2.2rem;text-align:center}
+#caption{margin-top:18px;font-size:1.4rem;color:#3f6212;font-weight:bold;min-height:2.2rem;text-align:center}
+#score{color:#3f6212;margin-bottom:8px}
 </style>
 </head>
 <body>
-<a class="home" href="index.html">🏠</a>
+<a class="home" href="index.html" aria-label="Home">🏠</a>
 <h1>🦁 Animal Friends</h1>
-<p class="hint">Tap an animal to hear its name and sound!</p>
+<div class="tabs">
+<button id="t0" class="on">🔊 Tap & Hear</button>
+<button id="t1">❓ Quiz</button>
+</div>
+<div id="score">⭐ Stars: 0</div>
+<div id="prompt">Tap an animal to hear its name and sound!</div>
 <div id="zoo"></div>
 <div id="caption"></div>
 <script src="common.js"></script>
 <script>
 const animals=[["🐶","Dog","Woof woof!"],["🐱","Cat","Meow meow!"],["🐮","Cow","Moo moo!"],["🦁","Lion","Roarrr!"],["🐘","Elephant","Paw-paw-pawooo!"],["🐵","Monkey","Ooh ooh ah ah!"],["🐸","Frog","Ribbit ribbit!"],["🐤","Chick","Cheep cheep!"],["🐷","Pig","Oink oink!"],["🦆","Duck","Quack quack!"],["🐴","Horse","Neigh neigh!"],["🐑","Sheep","Baa baa!"]];
+let mode=0,stars=0;
 const zoo=document.getElementById('zoo');
-animals.forEach(([e,n,s])=>{const d=document.createElement('div');d.className='animal';
-d.innerHTML='<div class="face">'+e+'</div><div class="nm">'+n+'</div>';
-d.onclick=()=>{document.querySelectorAll('.animal').forEach(a=>a.classList.remove('talking'));d.classList.add('talking');
-document.getElementById('caption').textContent=e+' The '+n+' says '+s;say('The '+n+' says '+s)};
-zoo.appendChild(d)});
+function pk(a){return a[Math.floor(Math.random()*a.length)]}
+function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+function addStar(){stars++;document.getElementById('score').textContent='⭐ Stars: '+stars}
+// Tap & hear
+function tapMode(){
+  zoo.classList.remove('quiz');
+  document.getElementById('prompt').textContent='Tap an animal to hear its name and sound!';
+  document.getElementById('caption').textContent='';
+  zoo.innerHTML='';
+  animals.forEach(([e,n,s])=>{
+    const d=document.createElement('div');d.className='animal';d.setAttribute('role','button');d.setAttribute('aria-label',n);
+    d.innerHTML='<div class="face">'+e+'</div><div class="nm">'+n+'</div>';
+    d.onclick=()=>{
+      document.querySelectorAll('.animal').forEach(a=>a.classList.remove('talking'));
+      d.classList.add('talking');playSfx('click');
+      document.getElementById('caption').textContent=e+' The '+n+' says '+s;
+      say('The '+n+' says '+s);
+    };
+    zoo.appendChild(d);
+  });
+}
+// Quiz: which one is the Elephant?
+function quiz(){
+  zoo.classList.add('quiz');
+  document.getElementById('caption').textContent='';
+  const four=shuffle(animals).slice(0,4);
+  const target=pk(four);
+  document.getElementById('prompt').textContent='Which one is the '+target[1]+'?';
+  say('Which one is the '+target[1]+'?');
+  zoo.innerHTML='';
+  four.forEach(([e,n,s])=>{
+    const d=document.createElement('div');d.className='animal';d.setAttribute('role','button');d.setAttribute('aria-label','animal choice');
+    d.innerHTML='<div class="face">'+e+'</div>';
+    d.onclick=()=>{
+      if(n===target[1]){
+        d.classList.add('right');d.innerHTML+='<div class="nm">'+n+'</div>';
+        playSfx('correct');burstConfetti();addStar();playSfx('star');
+        say('Yes! That is the '+n+'! The '+n+' says '+s+' Great job, '+cheerName()+'!');
+        setTimeout(quiz,2400);
+      }else{
+        d.classList.add('wrong');playSfx('wrong');
+        say('That is the '+n+'. Find the '+target[1]+'!');
+        setTimeout(()=>d.classList.remove('wrong'),500);
+      }
+    };
+    zoo.appendChild(d);
+  });
+}
+document.getElementById('t0').onclick=()=>{mode=0;document.getElementById('t0').classList.add('on');document.getElementById('t1').classList.remove('on');tapMode()};
+document.getElementById('t1').onclick=()=>{mode=1;document.getElementById('t1').classList.add('on');document.getElementById('t0').classList.remove('on');quiz()};
+tapMode();
 </script>
 </body>
 </html>
