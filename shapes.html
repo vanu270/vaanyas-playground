@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔺 Shape Hunt — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#fde68a,#a7f3d0);display:flex;flex-direction:column;align-items:center;padding:16px}
+.home{position:fixed;top:12px;left:12px;font-size:1.6rem;text-decoration:none;background:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.15);z-index:10}
+h1{color:#b45309;margin:10px 0;font-size:1.6rem}
+#task{font-size:1.5rem;color:#92400e;font-weight:bold;margin:8px 0 20px;min-height:2rem}
+#board{display:grid;grid-template-columns:repeat(2,140px);gap:24px}
+.shape{width:140px;height:140px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.shape:hover{transform:scale(1.1)}
+.shape svg{filter:drop-shadow(0 4px 3px rgba(0,0,0,.2))}
+.right{animation:spin .6s}
+.wrong{animation:shake .4s}
+@keyframes spin{to{transform:rotate(360deg) scale(1.2)}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+#score{color:#92400e;font-size:1.1rem;margin-top:20px}
+</style>
+</head>
+<body>
+<a class="home" href="index.html">🏠</a>
+<h1>🔺 Shape Hunt</h1>
+<div id="task"></div>
+<div id="board"></div>
+<div id="score">⭐ Stars: 0</div>
+<script src="common.js"></script>
+<script>
+const shapes={circle:'<circle cx="60" cy="60" r="55" fill="COL"/>',square:'<rect x="8" y="8" width="104" height="104" rx="10" fill="COL"/>',triangle:'<polygon points="60,8 112,112 8,112" fill="COL"/>',star:'<polygon points="60,5 74,45 116,45 82,70 94,112 60,86 26,112 38,70 4,45 46,45" fill="COL"/>',heart:'<path d="M60 110 C10 70 10 30 35 22 C50 17 60 30 60 38 C60 30 70 17 85 22 C110 30 110 70 60 110Z" fill="COL"/>'};
+const colors={red:'#ef4444',blue:'#3b82f6',green:'#22c55e',yellow:'#eab308',purple:'#a855f7',orange:'#f97316'};
+let stars=0;
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function newRound(){const sNames=Object.keys(shapes),cNames=Object.keys(colors);
+const target={s:pick(sNames),c:pick(cNames)};
+const cells=[target];
+while(cells.length<4){const cand={s:pick(sNames),c:pick(cNames)};if(!cells.some(x=>x.s===cand.s&&x.c===cand.c))cells.push(cand)}
+cells.sort(()=>Math.random()-.5);
+document.getElementById('task').textContent='Find the '+target.c+' '+target.s+'!';
+say('Find the '+target.c+' '+target.s+'!');
+const board=document.getElementById('board');board.innerHTML='';
+cells.forEach(cell=>{const d=document.createElement('div');d.className='shape';
+d.innerHTML='<svg width="120" height="120" viewBox="0 0 120 120">'+shapes[cell.s].replace('COL',colors[cell.c])+'</svg>';
+d.onclick=()=>{if(cell.s===target.s&&cell.c===target.c){d.classList.add('right');stars++;
+document.getElementById('score').textContent='⭐ Stars: '+stars;say('Yay '+cheerName()+'! You found the '+target.c+' '+target.s+'!');
+setTimeout(newRound,1500)}else{d.classList.add('wrong');say('That is a '+cell.c+' '+cell.s+'. Try again!');
+setTimeout(()=>d.classList.remove('wrong'),500)}};
+board.appendChild(d)})}
+newRound();
+</script>
+</body>
+</html>

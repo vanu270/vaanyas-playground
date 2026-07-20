@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Finger Paint — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{height:100vh;display:flex;flex-direction:column;background:#fdf4ff;overflow:hidden;touch-action:none}
+.bar{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.1);flex-wrap:wrap}
+.home{font-size:1.5rem;text-decoration:none}
+.dot{width:38px;height:38px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.25);cursor:pointer}
+.dot.sel{border-color:#111;transform:scale(1.15)}
+#clear,#rainbow{font-size:1rem;padding:8px 14px;border:none;border-radius:12px;background:#f3e8ff;cursor:pointer;font-weight:bold;color:#7c3aed}
+canvas{flex:1;cursor:crosshair}
+</style>
+</head>
+<body>
+<div class="bar">
+<a class="home" href="index.html">🏠</a>
+<span id="dots"></span>
+<button id="rainbow">🌈 Rainbow</button>
+<button id="clear">🧽 Clear</button>
+</div>
+<canvas id="c"></canvas>
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+function fit(){canvas.width=canvas.clientWidth;canvas.height=canvas.clientHeight}
+window.addEventListener('resize',fit);
+const colors=["#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899","#78350f","#111827"];
+let color=colors[0],rainbow=false,hue=0,drawing=false,last=null;
+const dots=document.getElementById('dots');
+colors.forEach((c,i)=>{const d=document.createElement('span');d.className='dot'+(i===0?' sel':'');d.style.background=c;d.style.display='inline-block';
+d.onclick=()=>{color=c;rainbow=false;document.querySelectorAll('.dot').forEach(x=>x.classList.remove('sel'));d.classList.add('sel')};dots.appendChild(d)});
+document.getElementById('rainbow').onclick=()=>{rainbow=true;document.querySelectorAll('.dot').forEach(x=>x.classList.remove('sel'))};
+document.getElementById('clear').onclick=()=>ctx.clearRect(0,0,canvas.width,canvas.height);
+function pos(e){const r=canvas.getBoundingClientRect();const p=e.touches?e.touches[0]:e;return{x:p.clientX-r.left,y:p.clientY-r.top}}
+function start(e){drawing=true;last=pos(e)}
+function move(e){if(!drawing)return;e.preventDefault();const p=pos(e);
+ctx.lineWidth=16;ctx.lineCap='round';
+ctx.strokeStyle=rainbow?`hsl(${(hue+=4)%360},90%,55%)`:color;
+ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p}
+function end(){drawing=false}
+canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end);
+fit();
+</script>
+</body>
+</html>

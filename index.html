@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vaanya's Playground 🎪 — Learn & Play!</title>
+<meta name="description" content="Free, safe learning games for little kids — letters, counting, shapes, animals & more. No ads, no tracking.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif}
+body{min-height:100vh;background:linear-gradient(135deg,#ffe29f,#ffa99f 40%,#c2a8fd);display:flex;flex-direction:column;align-items:center;padding:20px}
+h1{font-size:clamp(2rem,7vw,3.5rem);color:#7c3aed;text-shadow:3px 3px 0 #fff;margin:10px 0;text-align:center}
+.sub{color:#6b21a8;font-size:1.2rem;margin-bottom:24px;text-align:center;font-weight:bold}
+#edit{position:fixed;top:14px;right:14px;font-size:1.3rem;background:#fff;border:none;border-radius:50%;width:48px;height:48px;box-shadow:0 4px 0 rgba(0,0,0,.15);cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:18px;max-width:820px;width:100%}
+.card{background:#fff;border-radius:24px;padding:24px 12px;text-align:center;text-decoration:none;box-shadow:0 6px 0 rgba(0,0,0,.12);transition:transform .15s;border:4px solid transparent}
+.card:hover{transform:scale(1.06) rotate(-2deg);border-color:#fbbf24}
+.card .emoji{font-size:3.2rem;display:block;margin-bottom:8px}
+.card .name{font-size:1.2rem;font-weight:bold;color:#7c3aed}
+.card .desc{font-size:.85rem;color:#9333ea;margin-top:4px}
+.tip{margin-top:28px;background:rgba(255,255,255,.7);padding:12px 20px;border-radius:16px;color:#6b21a8;font-size:.95rem;text-align:center}
+footer{margin-top:20px;color:#7c3aed;font-size:.85rem;text-align:center}
+#ov{position:fixed;inset:0;background:rgba(124,58,237,.55);display:flex;align-items:center;justify-content:center;z-index:50}
+#ov.hide{display:none}
+.box{background:#fff;border-radius:28px;padding:36px 32px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.3);max-width:340px;width:90%}
+.box .wave{font-size:3.4rem}
+.box h2{color:#7c3aed;margin:10px 0 18px;font-size:1.5rem}
+.box input{width:100%;font-size:1.3rem;padding:12px;border:3px solid #c4b5fd;border-radius:16px;text-align:center;outline:none}
+.box input:focus{border-color:#7c3aed}
+.box button{margin-top:16px;width:100%;font-size:1.3rem;font-weight:bold;padding:14px;border:none;border-radius:16px;background:#7c3aed;color:#fff;cursor:pointer;box-shadow:0 5px 0 #5b21b6}
+.box button:active{transform:translateY(3px);box-shadow:none}
+</style>
+</head>
+<body>
+<button id="edit" title="Change name">✏️</button>
+<h1 id="title">🎪 Vaanya's Playground</h1>
+<p class="sub" id="greet">Tap a game and learn while you play! ✨</p>
+<div class="grid">
+  <a class="card" href="letters.html"><span class="emoji">🔤</span><span class="name">Letter Pops</span><div class="desc">A for Apple! Learn ABCs</div></a>
+  <a class="card" href="counting.html"><span class="emoji">🔢</span><span class="name">Count With Me</span><div class="desc">Count and pick the number!</div></a>
+  <a class="card" href="shapes.html"><span class="emoji">🔺</span><span class="name">Shape Hunt</span><div class="desc">Find shapes and colors!</div></a>
+  <a class="card" href="animals.html"><span class="emoji">🦁</span><span class="name">Animal Friends</span><div class="desc">Tap animals, hear sounds!</div></a>
+  <a class="card" href="balloons.html"><span class="emoji">🎈</span><span class="name">Balloon Pop</span><div class="desc">Pop letters & numbers!</div></a>
+  <a class="card" href="paint.html"><span class="emoji">🎨</span><span class="name">Finger Paint</span><div class="desc">Draw rainbows!</div></a>
+</div>
+<p class="tip">💡 Parent tip: press <b>F11</b> for fullscreen so little fingers stay in the game. Turn the sound on! 🔊</p>
+<footer>Made with ❤️ for Vaanya — and for your little one too.<br>No ads · No tracking · Nothing to install · Free forever</footer>
+
+<div id="ov" class="hide">
+  <div class="box">
+    <div class="wave">👋</div>
+    <h2>What's your name?</h2>
+    <input id="nm" placeholder="Type your name" maxlength="20" autocomplete="off">
+    <button id="go">▶ Let's Play!</button>
+  </div>
+</div>
+
+<script src="common.js"></script>
+<script>
+function refresh(){
+  const n=kidName();
+  document.getElementById('title').textContent='🎪 '+(n?n+"'s":"Vaanya's")+' Playground';
+  document.getElementById('greet').textContent=(n?'Hi '+n+'! ':'')+'Tap a game and learn while you play! ✨';
+}
+function openOv(){document.getElementById('ov').classList.remove('hide');document.getElementById('nm').value=kidName();document.getElementById('nm').focus()}
+function closeOv(){
+  const n=document.getElementById('nm').value.trim();
+  if(n)setKidName(n.charAt(0).toUpperCase()+n.slice(1));
+  document.getElementById('ov').classList.add('hide');
+  refresh();
+  const nm=kidName();
+  say(nm?'Hi '+nm+'! Welcome to your playground! Pick a game!':'Welcome! Pick a game!');
+}
+document.getElementById('go').onclick=closeOv;
+document.getElementById('nm').addEventListener('keydown',e=>{if(e.key==='Enter')closeOv()});
+document.getElementById('edit').onclick=openOv;
+refresh();
+if(!kidName())openOv();
+</script>
+</body>
+</html>

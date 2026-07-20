@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎈 Balloon Pop — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{height:100vh;background:linear-gradient(180deg,#7dd3fc,#e0f2fe);overflow:hidden}
+.home{position:fixed;top:12px;left:12px;font-size:1.6rem;text-decoration:none;background:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.15);z-index:10}
+h1{text-align:center;color:#0369a1;padding-top:14px;font-size:1.5rem}
+#count{text-align:center;color:#075985;font-size:1.05rem}
+.balloon{position:absolute;width:86px;height:106px;border-radius:50% 50% 50% 50%/45% 45% 55% 55%;display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:bold;color:#fff;cursor:pointer;box-shadow:inset -8px -8px 0 rgba(0,0,0,.12);text-shadow:2px 2px 3px rgba(0,0,0,.3)}
+.balloon::after{content:"";position:absolute;bottom:-26px;left:50%;width:2px;height:26px;background:rgba(255,255,255,.8)}
+.boom{animation:boom .3s forwards}
+@keyframes boom{to{transform:scale(2);opacity:0}}
+</style>
+</head>
+<body>
+<a class="home" href="index.html">🏠</a>
+<h1>🎈 Balloon Pop!</h1>
+<div id="count">Popped: 0</div>
+<script src="common.js"></script>
+<script>
+const colors=["#ef4444","#f97316","#eab308","#22c55e","#3b82f6","#a855f7","#ec4899"];
+const items="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
+let popped=0;
+function spawn(){const b=document.createElement('div');b.className='balloon';
+const ch=items[Math.floor(Math.random()*items.length)];b.textContent=ch;
+b.style.background=colors[Math.floor(Math.random()*colors.length)];
+b.style.left=(5+Math.random()*85)+'vw';b.style.top='105vh';
+document.body.appendChild(b);
+const speed=25+Math.random()*35;const start=performance.now();
+function rise(now){const y=105-((now-start)/1000)*speed/3;
+if(y<-20){b.remove();return}b.style.top=y+'vh';
+if(!b.dead)requestAnimationFrame(rise)}
+requestAnimationFrame(rise);
+b.onclick=()=>{if(b.dead)return;b.dead=true;b.classList.add('boom');popped++;
+document.getElementById('count').textContent='Popped: '+popped;
+say(isNaN(ch)?ch:'Number '+ch);setTimeout(()=>b.remove(),320)}}
+setInterval(spawn,1400);spawn();spawn();
+</script>
+</body>
+</html>

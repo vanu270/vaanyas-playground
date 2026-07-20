@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔤 Letter Pops — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#a5f3fc,#fbcfe8);display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.home{position:fixed;top:12px;left:12px;font-size:1.6rem;text-decoration:none;background:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.15);z-index:10}
+h1{color:#0e7490;margin:16px 0 4px;font-size:1.6rem}
+.hint{color:#155e75;font-size:1rem;margin-bottom:8px}
+#stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer}
+#big{font-size:clamp(6rem,25vw,12rem);font-weight:bold;transition:transform .2s;line-height:1}
+#pic{font-size:clamp(4rem,18vw,7rem);line-height:1.2}
+#word{font-size:clamp(1.6rem,6vw,2.6rem);color:#0e7490;font-weight:bold}
+.pop{animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(.3) rotate(-10deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1)}}
+#abc{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px;max-width:900px}
+#abc button{font-size:1.3rem;font-weight:bold;width:44px;height:44px;border:none;border-radius:12px;background:#fff;color:#0e7490;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer}
+#abc button:active{transform:translateY(2px)}
+</style>
+</head>
+<body>
+<a class="home" href="index.html">🏠</a>
+<h1>🔤 Letter Pops</h1>
+<p class="hint">Press any letter key — or tap a letter below!</p>
+<div id="stage"><div id="big">A</div><div id="pic">🍎</div><div id="word">A is for Apple</div></div>
+<div id="abc"></div>
+<script src="common.js"></script>
+<script>
+const words={A:["Apple","🍎"],B:["Ball","⚽"],C:["Cat","🐱"],D:["Dog","🐶"],E:["Elephant","🐘"],F:["Fish","🐟"],G:["Grapes","🍇"],H:["Hat","🎩"],I:["Ice cream","🍦"],J:["Juice","🧃"],K:["Kite","🪁"],L:["Lion","🦁"],M:["Moon","🌙"],N:["Nest","🪺"],O:["Orange","🍊"],P:["Penguin","🐧"],Q:["Queen","👑"],R:["Rainbow","🌈"],S:["Sun","☀️"],T:["Train","🚂"],U:["Umbrella","☂️"],V:["Violin","🎻"],W:["Whale","🐳"],X:["Xylophone","🎼"],Y:["Yo-yo","🪀"],Z:["Zebra","🦓"]};
+const colors=["#e11d48","#ea580c","#ca8a04","#16a34a","#0891b2","#7c3aed","#db2777"];
+function show(L){const[w,e]=words[L];const big=document.getElementById('big');big.textContent=L;big.style.color=colors[Math.floor(Math.random()*colors.length)];document.getElementById('pic').textContent=e;document.getElementById('word').textContent=L+" is for "+w;[big,document.getElementById('pic')].forEach(el=>{el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')});say(L+"! "+L+" is for "+w)}
+document.addEventListener('keydown',ev=>{const k=ev.key.toUpperCase();if(words[k])show(k)});
+const abc=document.getElementById('abc');
+Object.keys(words).forEach(L=>{const b=document.createElement('button');b.textContent=L;b.onclick=()=>show(L);abc.appendChild(b)});
+document.getElementById('stage').onclick=()=>{const ks=Object.keys(words);show(ks[Math.floor(Math.random()*ks.length)])};
+</script>
+</body>
+</html>

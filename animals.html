@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦁 Animal Friends — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#d9f99d,#a5f3fc);
+display:flex;flex-direction:column;align-items:center;padding:16px}
+.home{position:fixed;top:12px;left:12px;font-size:1.6rem;text-decoration:none;background:#fff;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.15);z-index:10}
+h1{color:#3f6212;margin:10px 0;font-size:1.6rem}
+.hint{color:#4d7c0f;margin-bottom:16px}
+#zoo{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:16px;max-width:700px;width:100%}
+.animal{background:#fff;border-radius:22px;padding:16px 8px;text-align:center;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.12);transition:transform .15s}
+.animal:hover{transform:scale(1.08)}
+.animal .face{font-size:3.4rem}
+.animal .nm{font-weight:bold;color:#3f6212;margin-top:6px}
+.talking{animation:wiggle .6s}
+@keyframes wiggle{25%{transform:rotate(-8deg) scale(1.15)}75%{transform:rotate(8deg) scale(1.15)}}
+#caption{margin-top:20px;font-size:1.5rem;color:#3f6212;font-weight:bold;min-height:2.2rem;text-align:center}
+</style>
+</head>
+<body>
+<a class="home" href="index.html">🏠</a>
+<h1>🦁 Animal Friends</h1>
+<p class="hint">Tap an animal to hear its name and sound!</p>
+<div id="zoo"></div>
+<div id="caption"></div>
+<script src="common.js"></script>
+<script>
+const animals=[["🐶","Dog","Woof woof!"],["🐱","Cat","Meow meow!"],["🐮","Cow","Moo moo!"],["🦁","Lion","Roarrr!"],["🐘","Elephant","Paw-paw-pawooo!"],["🐵","Monkey","Ooh ooh ah ah!"],["🐸","Frog","Ribbit ribbit!"],["🐤","Chick","Cheep cheep!"],["🐷","Pig","Oink oink!"],["🦆","Duck","Quack quack!"],["🐴","Horse","Neigh neigh!"],["🐑","Sheep","Baa baa!"]];
+const zoo=document.getElementById('zoo');
+animals.forEach(([e,n,s])=>{const d=document.createElement('div');d.className='animal';
+d.innerHTML='<div class="face">'+e+'</div><div class="nm">'+n+'</div>';
+d.onclick=()=>{document.querySelectorAll('.animal').forEach(a=>a.classList.remove('talking'));d.classList.add('talking');
+document.getElementById('caption').textContent=e+' The '+n+' says '+s;say('The '+n+' says '+s)};
+zoo.appendChild(d)});
+</script>
+</body>
+</html>
