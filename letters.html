@@ -33,6 +33,7 @@ h1{color:#0e7490;margin:14px 0 8px;font-size:1.6rem}
 #abc{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px;max-width:900px}
 #abc button{font-size:1.3rem;font-weight:bold;width:46px;height:46px;border:none;border-radius:12px;background:#fff;color:#0e7490;box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer}
 #score{color:#155e75;font-size:1.05rem;margin-bottom:8px}
+.home{display:none !important}/*vp-hide-old*/
 </style>
 </head>
 <body>
@@ -48,6 +49,7 @@ h1{color:#0e7490;margin:14px 0 8px;font-size:1.6rem}
 <div id="stage"></div>
 <div id="abc"></div>
 <script src="common.js"></script>
+<script src="core.js"></script>
 <script>
 const words={A:["Apple","🍎"],B:["Ball","⚽"],C:["Cat","🐱"],D:["Dog","🐶"],E:["Elephant","🐘"],F:["Fish","🐟"],G:["Grapes","🍇"],H:["Hat","🎩"],I:["Ice cream","🍦"],J:["Juice","🧃"],K:["Kite","🪁"],L:["Lion","🦁"],M:["Moon","🌙"],N:["Nest","🪺"],O:["Orange","🍊"],P:["Penguin","🐧"],Q:["Queen","👑"],R:["Rainbow","🌈"],S:["Sun","☀️"],T:["Train","🚂"],U:["Umbrella","☂️"],V:["Violin","🎻"],W:["Whale","🐳"],X:["Xylophone","🎼"],Y:["Yo-yo","🪀"],Z:["Zebra","🦓"]};
 const spellWords=[["CAT","🐱"],["DOG","🐶"],["SUN","☀️"],["HAT","🎩"],["PIG","🐷"],["COW","🐮"],["BEE","🐝"],["FOX","🦊"],["BUS","🚌"],["STAR","⭐"],["BALL","⚽"],["FISH","🐟"]];
@@ -57,8 +59,11 @@ let mode=0,stars=0;
 const stage=document.getElementById('stage'),prompt_=null;
 function pk(a){return a[Math.floor(Math.random()*a.length)]}
 function shuffle(a){return a.slice().sort(()=>Math.random()-.5)}
+const DIFF=['easy','easy','medium','hard'];
 function addStar(){stars++;document.getElementById('score').textContent='⭐ Stars: '+stars;playSfx('star')}
-function win(msg){playSfx('correct');burstConfetti();addStar();say(msg)}
+function win(msg){playSfx('correct');burstConfetti();addStar();
+  VP.correct({difficulty:DIFF[mode]||'easy',skill:'letters',track:'letters'});
+  say(msg)}
 // ----- Free play -----
 function freePlay(){
   stage.innerHTML='<div id="prompt">Press any letter key — or tap a letter below!</div><div id="bigwrap"><div id="big">A</div><div id="pic">🍎</div><div id="word">A is for Apple</div></div>';
@@ -85,7 +90,7 @@ function easy(){
     const b=document.createElement('button');b.textContent=o;
     b.onclick=()=>{
       if(o===target){b.classList.add('right');win('Yes! That is '+target+'! Great job, '+cheerName()+'!');setTimeout(easy,1900)}
-      else{b.classList.add('wrong');b.disabled=true;playSfx('wrong');say('That is '+o+'. Find '+target+'!')}
+      else{b.classList.add('wrong');b.disabled=true;playSfx('wrong');VP.wrong();say('That is '+o+'. Find '+target+'!')}
     };
     document.getElementById('ch').appendChild(b);
   });
@@ -101,7 +106,7 @@ function medium(){
     const b=document.createElement('button');b.textContent=o;
     b.onclick=()=>{
       if(o===target){b.classList.add('right');win(w+' starts with '+target+'! Amazing, '+cheerName()+'!');setTimeout(medium,2100)}
-      else{b.classList.add('wrong');b.disabled=true;playSfx('wrong');say('Try again! '+w+'... '+w+'...')}
+      else{b.classList.add('wrong');b.disabled=true;playSfx('wrong');VP.wrong();say('Try again! '+w+'... '+w+'...')}
     };
     document.getElementById('ch').appendChild(b);
   });
@@ -122,7 +127,7 @@ function hard(){
       if(o===w[pos]){
         playSfx('click');say(o);pos++;drawBlanks();b.disabled=true;
         if(pos===w.length){win('You spelled '+w+'! '+w.split('').join(', ')+', '+w+'! Super speller, '+cheerName()+'!');setTimeout(hard,2600)}
-      }else{b.classList.add('wrong');playSfx('wrong');setTimeout(()=>b.classList.remove('wrong'),450);say('We need '+w[pos])}
+      }else{b.classList.add('wrong');playSfx('wrong');VP.wrong();setTimeout(()=>b.classList.remove('wrong'),450);say('We need '+w[pos])}
     };
     document.getElementById('ch').appendChild(b);
   });

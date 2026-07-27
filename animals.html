@@ -28,6 +28,7 @@ h1{color:#3f6212;margin:10px 0;font-size:1.6rem}
 @keyframes wiggle{25%{transform:rotate(-8deg) scale(1.15)}75%{transform:rotate(8deg) scale(1.15)}}
 #caption{margin-top:18px;font-size:1.4rem;color:#3f6212;font-weight:bold;min-height:2.2rem;text-align:center}
 #score{color:#3f6212;margin-bottom:8px}
+.home{display:none !important}/*vp-hide-old*/
 </style>
 </head>
 <body>
@@ -42,6 +43,7 @@ h1{color:#3f6212;margin:10px 0;font-size:1.6rem}
 <div id="zoo"></div>
 <div id="caption"></div>
 <script src="common.js"></script>
+<script src="core.js"></script>
 <script>
 const animals=[["🐶","Dog","Woof woof!"],["🐱","Cat","Meow meow!"],["🐮","Cow","Moo moo!"],["🦁","Lion","Roarrr!"],["🐘","Elephant","Paw-paw-pawooo!"],["🐵","Monkey","Ooh ooh ah ah!"],["🐸","Frog","Ribbit ribbit!"],["🐤","Chick","Cheep cheep!"],["🐷","Pig","Oink oink!"],["🦆","Duck","Quack quack!"],["🐴","Horse","Neigh neigh!"],["🐑","Sheep","Baa baa!"]];
 let mode=0,stars=0;
@@ -83,10 +85,11 @@ function quiz(){
       if(n===target[1]){
         d.classList.add('right');d.innerHTML+='<div class="nm">'+n+'</div>';
         playSfx('correct');burstConfetti();addStar();playSfx('star');
+        VP.correct({difficulty:'easy',skill:'animals',track:'animals'});
         say('Yes! That is the '+n+'! The '+n+' says '+s+' Great job, '+cheerName()+'!');
         setTimeout(quiz,2400);
       }else{
-        d.classList.add('wrong');playSfx('wrong');
+        d.classList.add('wrong');playSfx('wrong');VP.wrong();
         say('That is the '+n+'. Find the '+target[1]+'!');
         setTimeout(()=>d.classList.remove('wrong'),500);
       }

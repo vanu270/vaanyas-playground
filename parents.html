@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>👨‍👩‍👧 Parent Dashboard — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif}
+body{min-height:100vh;background:linear-gradient(135deg,#e0e7ff,#fae8ff);padding:14px;display:flex;flex-direction:column;align-items:center}
+h1{color:#4338ca;font-size:1.5rem;margin:6px 0;text-align:center}
+.sub{color:#4f46e5;margin-bottom:14px;text-align:center;font-size:.95rem}
+.wrap{max-width:840px;width:100%}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:22px;padding:16px;text-align:center;box-shadow:0 5px 16px rgba(0,0,0,.08)}
+.kpi .v{font-size:1.9rem;font-weight:bold;color:#4338ca}
+.kpi .l{color:#6366f1;font-size:.85rem;margin-top:2px}
+.panel{background:#fff;border-radius:24px;padding:18px;margin-bottom:14px;box-shadow:0 5px 16px rgba(0,0,0,.08)}
+.panel h2{color:#4338ca;font-size:1.1rem;margin-bottom:12px}
+.week{display:flex;align-items:flex-end;gap:8px;height:160px}
+.week .d{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.week .bar{width:100%;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#818cf8,#4338ca);min-height:4px;transition:height .8s cubic-bezier(.2,.8,.2,1);position:relative}
+.week .bar span{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:.72rem;color:#4338ca;font-weight:bold}
+.week .lb{font-size:.78rem;color:#6366f1}
+.skill{margin-bottom:10px}
+.skill .t{display:flex;justify-content:space-between;color:#4338ca;font-size:.92rem;font-weight:bold;margin-bottom:3px}
+.skill .b{height:16px;background:#e0e7ff;border-radius:99px;overflow:hidden}
+.skill .b i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#4338ca);transition:width .9s}
+.insight{display:flex;gap:10px;flex-wrap:wrap}
+.insight div{flex:1;min-width:150px;border-radius:16px;padding:12px;font-size:.92rem}
+.good{background:#dcfce7;color:#166534}
+.work{background:#fef3c7;color:#92400e}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.actions a,.actions button{background:#fff;border:none;border-radius:16px;padding:12px 18px;color:#4338ca;font-weight:bold;
+  text-decoration:none;box-shadow:0 4px 0 rgba(0,0,0,.1);cursor:pointer;font-family:inherit;font-size:.92rem}
+.actions .danger{color:#b91c1c}
+.note{color:#6366f1;font-size:.8rem;text-align:center;margin-top:12px;line-height:1.5}
+</style>
+</head>
+<body data-no-hud="1">
+<h1>👨‍👩‍👧 Parent Dashboard</h1>
+<p class="sub" id="sub"></p>
+<div class="wrap">
+  <div class="cards" id="kpis"></div>
+
+  <div class="panel">
+    <h2>📅 This week — minutes played each day</h2>
+    <div class="week" id="week"></div>
+  </div>
+
+  <div class="panel">
+    <h2>📊 Skills practised (correct answers)</h2>
+    <div id="skills"></div>
+  </div>
+
+  <div class="panel">
+    <h2>💡 At a glance</h2>
+    <div class="insight" id="insight"></div>
+  </div>
+
+  <div class="actions">
+    <a href="index.html">🏠 Back to games</a>
+    <a href="stickers.html">🎁 Sticker book</a>
+    <button class="danger" id="reset">🗑️ Reset progress</button>
+  </div>
+  <p class="note">All progress is stored only on this device — nothing is uploaded anywhere.<br>
+  Learning time counts active play in 15-second ticks and pauses when the tab is hidden.</p>
+</div>
+<script src="common.js"></script>
+<script src="core.js"></script>
+<script>
+const s = VP.stats();
+const mins = x => Math.round(x / 60);
+const $ = id => document.getElementById(id);
+
+$('sub').textContent = (kidName() || 'Your child') + ' · Level ' + s.level + ' · ' + s.xp + ' XP';
+
+$('kpis').innerHTML = [
+  ['⏱️ ' + mins(s.todaySecs) + 'm', "Today's learning time"],
+  ['🎮 ' + s.todayGames,            'Games finished today'],
+  ['⭐ ' + s.stars,                 'Total stars earned'],
+  ['🏆 ' + s.level,                 'Current level'],
+  ['🔥 ' + s.streak,                'Day streak'],
+  ['🎯 ' + s.accuracy + '%',        'Answer accuracy']
+].map(([v, l])=>'<div class="kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>').join('');
+
+// weekly bar chart (pure CSS, no library)
+const maxMin = Math.max(5, ...s.week.map(d=>mins(d.secs)));
+$('week').innerHTML = s.week.map(d=>{
+  const m = mins(d.secs);
+  const h = Math.round(m / maxMin * 100);
+  return '<div class="d"><div class="bar" style="height:0" data-h="' + h + '"><span>' + (m || '') + '</span></div>' +
+         '<div class="lb">' + d.label + '</div></div>';
+}).join('');
+setTimeout(()=>document.querySelectorAll('.week .bar').forEach(b=>{ b.style.height = Math.max(2, +b.dataset.h) + '%'; }), 150);
+
+// skills breakdown
+const maxSkill = Math.max(1, ...s.skills.map(x=>x.value));
+$('skills').innerHTML = s.skills.length
+  ? s.skills.map(x=>'<div class="skill"><div class="t"><span>' + x.name + '</span><span>' + x.value + '</span></div>' +
+      '<div class="b"><i style="width:' + Math.round(x.value / maxSkill * 100) + '%"></i></div></div>').join('')
+  : '<p style="color:#6366f1">No practice recorded yet — play a game to see skills here.</p>';
+
+$('insight').innerHTML =
+  '<div class="good"><b>💪 Strongest skill</b><br>' + s.strongest + '</div>' +
+  '<div class="work"><b>🌱 Needs practice</b><br>' + s.weakest + '</div>';
+
+$('reset').onclick = ()=>VP.reset();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🔁 Pattern Party — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#fde68a,#bbf7d0);display:flex;flex-direction:column;align-items:center;padding:12px}
+h1{color:#b45309;font-size:1.5rem;margin:6px 0}
+#meta{color:#92400e;margin-bottom:10px}
+#card{background:rgba(255,255,255,.85);border-radius:28px;padding:22px 16px;max-width:640px;width:100%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+#seq{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;font-size:clamp(2rem,9vw,3rem);margin-bottom:6px}
+#seq .q{width:1.6em;height:1.6em;border-radius:18px;border:4px dashed #f59e0b;display:inline-flex;align-items:center;justify-content:center;color:#b45309;font-size:.9em}
+#hint{color:#92400e;font-size:1.15rem;margin-bottom:10px}
+.opts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.opts button{font-size:2.4rem;width:88px;height:88px;border:none;border-radius:22px;background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.15);cursor:pointer}
+.opts button:active{transform:translateY(3px)}
+.opts button.right{background:#22c55e;animation:party .5s}
+.opts button.wrong{background:#fca5a5;animation:shake .4s}
+@keyframes party{50%{transform:scale(1.25) rotate(6deg)}}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#msg{margin-top:14px;font-size:1.15rem;color:#92400e;font-weight:bold;min-height:1.6rem}
+</style>
+</head>
+<body>
+<h1>🔁 Pattern Party</h1>
+<div id="meta"></div>
+<div id="card">
+  <div id="seq"></div>
+  <div id="hint">What comes next?</div>
+  <div class="opts" id="opts"></div>
+  <div id="msg"></div>
+</div>
+<script src="common.js"></script>
+<script src="core.js"></script>
+<script>
+/* Pattern types get harder with level: AB → ABC → AABB → skip counting */
+const ITEMS = ['🍎','⭐','🎈','🐟','🌸','🚗','🐤','🦋','🔵','🔺'];
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => a.slice().sort(()=>Math.random()-.5);
+const ROUND = 5;
+let qi = 0, results = [], answer = null;
+
+function makePattern(){
+  const lv = VP.unlockedLevel();
+  const r = Math.random();
+  // Skip counting for level 5
+  if(lv >= 5 && r < .35){
+    const step = pick([2,5,10]);
+    const start = step;
+    const seq = [start, start+step, start+step*2, start+step*3];
+    return {seq: seq.map(String), next: String(start+step*4), speak:'Count by '+step+'. What comes next?', hard:true};
+  }
+  const pool = shuffle(ITEMS);
+  if(lv <= 2){                                    // AB AB AB ?
+    const [a,b] = pool;
+    return {seq:[a,b,a,b,a], next:b, speak:'What comes next in the pattern?', hard:false};
+  }
+  if(lv <= 4){                                    // ABC ABC ?
+    const [a,b,c] = pool;
+    return {seq:[a,b,c,a,b,c,a], next:b, speak:'What comes next in the pattern?', hard:false};
+  }
+  const [a,b] = pool;                             // AABB AABB ?
+  return {seq:[a,a,b,b,a,a,b], next:b, speak:'What comes next in the pattern?', hard:true};
+}
+function render(){
+  if(qi >= ROUND){
+    const perfect = results.every(x=>x===true);
+    VP.finishRound({perfect, track:'patterns', title: perfect ? 'PERFECT PATTERNS! 🏆' : 'Round complete! 🎉'});
+    qi = 0; results = [];
+    setTimeout(render, 900);
+    return;
+  }
+  const p = makePattern();
+  answer = p.next;
+  $('meta').textContent = 'Pattern ' + (qi+1) + ' of ' + ROUND + '   •   Level ' + VP.unlockedLevel();
+  $('seq').innerHTML = p.seq.map(x=>'<span>'+x+'</span>').join('') + '<span class="q">?</span>';
+  $('hint').textContent = p.speak;
+  $('msg').textContent = '';
+  say(p.speak);
+  const wrongs = shuffle((p.hard && !isNaN(p.next))
+      ? [String(+p.next+1), String(Math.max(0,+p.next-2)), String(+p.next+3)]
+      : ITEMS.filter(x=>!p.seq.includes(x))).slice(0,2);
+  const box = $('opts'); box.innerHTML = '';
+  shuffle([p.next, ...wrongs]).forEach(c=>{
+    const b = document.createElement('button');
+    b.textContent = c;
+    b.setAttribute('aria-label','choice '+c);
+    b.onclick = () => {
+      if(c === answer){
+        b.classList.add('right'); playSfx('correct');
+        VP.correct({difficulty: p.hard ? 'hard' : 'medium', skill:'patterns', track:'patterns'});
+        $('msg').textContent = '🎉 Yes! ' + c + ' comes next!';
+        say('Yes! ' + c + ' comes next! Great pattern spotting, ' + cheerName() + '!');
+        results[qi] = results[qi] !== false;
+        qi++;
+        setTimeout(render, 1500);
+      }else{
+        b.classList.add('wrong'); playSfx('wrong'); VP.wrong();
+        results[qi] = false;
+        setTimeout(()=>b.classList.remove('wrong'), 420);
+        say('Look at the pattern again!');
+        $('msg').textContent = 'Look at the pattern again!';
+      }
+    };
+    box.appendChild(b);
+  });
+}
+render();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

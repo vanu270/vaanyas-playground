@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🧠 Memory Match — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#fecdd3,#c7d2fe);display:flex;flex-direction:column;align-items:center;padding:12px}
+h1{color:#be123c;font-size:1.5rem;margin:6px 0}
+#meta{color:#9f1239;margin-bottom:10px}
+#grid{display:grid;gap:10px;max-width:520px;width:100%}
+.card{aspect-ratio:1;border-radius:18px;background:#fff;box-shadow:0 5px 0 rgba(0,0,0,.14);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:clamp(1.6rem,8vw,2.6rem);
+  transition:transform .25s;transform-style:preserve-3d;position:relative}
+.card .back,.card .front{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  backface-visibility:hidden;border-radius:18px}
+.card .back{background:linear-gradient(135deg,#f472b6,#a78bfa);color:#fff;font-size:1.8rem}
+.card .front{transform:rotateY(180deg);background:#fff}
+.card.flip{transform:rotateY(180deg)}
+.card.done{animation:pulse .5s;opacity:.55}
+@keyframes pulse{50%{transform:rotateY(180deg) scale(1.15)}}
+#msg{margin-top:14px;font-size:1.15rem;color:#9f1239;font-weight:bold;min-height:1.6rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>🧠 Memory Match</h1>
+<div id="meta"></div>
+<div id="grid"></div>
+<div id="msg">Find the matching pairs!</div>
+<script src="common.js"></script>
+<script src="core.js"></script>
+<script>
+/* Grid size scales with level: L1-2 = 6 cards, L3-4 = 12, L5 = 16 */
+const SETS = ['🐶','🐱','🦁','🐘','🐵','🐧','🦊','🐼','🐸','🐢','🦋','🐝'];
+const $ = id => document.getElementById(id);
+let first = null, lock = false, matched = 0, tries = 0, pairs = 3;
+
+function pairCount(){
+  const lv = VP.unlockedLevel();
+  return lv <= 2 ? 3 : lv <= 4 ? 6 : 8;
+}
+function build(){
+  pairs = pairCount();
+  matched = 0; tries = 0; first = null; lock = false;
+  const chosen = SETS.slice().sort(()=>Math.random()-.5).slice(0, pairs);
+  const deck = [...chosen, ...chosen].sort(()=>Math.random()-.5);
+  const cols = pairs <= 3 ? 3 : pairs <= 6 ? 4 : 4;
+  const grid = $('grid');
+  grid.style.gridTemplateColumns = 'repeat('+cols+',1fr)';
+  grid.innerHTML = '';
+  $('meta').textContent = pairs + ' pairs to find   •   Level ' + VP.unlockedLevel();
+  $('msg').textContent = 'Find the matching pairs!';
+  say('Find the matching pairs!');
+  deck.forEach(emoji=>{
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.setAttribute('role','button');
+    c.setAttribute('aria-label','memory card');
+    c.innerHTML = '<div class="back">❓</div><div class="front">'+emoji+'</div>';
+    c.dataset.emoji = emoji;
+    c.onclick = () => flip(c);
+    grid.appendChild(c);
+  });
+}
+function flip(card){
+  if(lock || card.classList.contains('flip') || card.classList.contains('done')) return;
+  card.classList.add('flip');
+  playSfx('click');
+  if(!first){ first = card; return; }
+  lock = true; tries++;
+  if(first.dataset.emoji === card.dataset.emoji){
+    setTimeout(()=>{
+      first.classList.add('done'); card.classList.add('done');
+      playSfx('correct');
+      VP.correct({difficulty: pairs >= 6 ? 'hard' : 'medium', skill:'memory', track:'memory'});
+      matched++; first = null; lock = false;
+      $('msg').textContent = '🎉 Match! ' + matched + ' of ' + pairs;
+      say('Match!');
+      if(matched === pairs) win();
+    }, 420);
+  }else{
+    setTimeout(()=>{
+      first.classList.remove('flip'); card.classList.remove('flip');
+      playSfx('wrong'); VP.wrong();
+      first = null; lock = false;
+      $('msg').textContent = 'Not a match — try again!';
+    }, 900);
+  }
+}
+function win(){
+  const perfect = tries === pairs;              // no wrong flips at all
+  VP.finishRound({perfect, track:'memoryWin', title: perfect ? 'PERFECT MEMORY! 🏆' : 'You found them all! 🎉'});
+  say('You found them all! Amazing memory, ' + cheerName() + '!');
+  setTimeout(build, 1200);
+}
+build();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

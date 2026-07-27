@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🔢 Maths Fun — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#bfdbfe,#fbcfe8);display:flex;flex-direction:column;align-items:center;padding:12px}
+h1{color:#1d4ed8;font-size:1.5rem;margin:6px 0}
+.modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:760px}
+.modes button{font-size:.95rem;font-weight:bold;padding:10px 12px;border:none;border-radius:14px;background:#fff;color:#1d4ed8;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px}
+.modes button.on{background:#1d4ed8;color:#fff}
+#meta{color:#1e40af;font-size:1rem;margin-bottom:6px}
+#card{background:rgba(255,255,255,.85);border-radius:28px;padding:22px 18px;max-width:640px;width:100%;text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.12)}
+#q{font-size:clamp(2rem,9vw,3.4rem);font-weight:bold;color:#1e3a8a;margin-bottom:8px;line-height:1.25}
+#objects{font-size:2.4rem;line-height:1.5;margin-bottom:10px;word-break:break-word}
+.opts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.opts button{font-size:2.2rem;font-weight:bold;min-width:88px;height:88px;padding:0 10px;border:none;border-radius:22px;background:#fff;color:#1d4ed8;
+  box-shadow:0 6px 0 rgba(0,0,0,.15);cursor:pointer}
+.opts button:active{transform:translateY(3px)}
+.opts button.right{background:#22c55e;color:#fff;animation:party .5s}
+.opts button.wrong{background:#fca5a5;animation:shake .4s}
+.opts button:disabled{opacity:.5}
+@keyframes party{50%{transform:scale(1.25) rotate(6deg)}}
+@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#order{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;min-height:70px}
+#order .slot{width:64px;height:64px;border-radius:16px;border:3px dashed #93c5fd;display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;font-weight:bold;color:#1d4ed8;background:#fff}
+#msg{margin-top:12px;font-size:1.15rem;color:#1e40af;font-weight:bold;min-height:1.6rem}
+#progress{display:flex;gap:6px;justify-content:center;margin-top:12px}
+#progress span{width:16px;height:16px;border-radius:50%;background:#dbeafe;border:2px solid #93c5fd}
+#progress span.hit{background:#22c55e;border-color:#16a34a}
+#progress span.miss{background:#fca5a5;border-color:#ef4444}
+</style>
+</head>
+<body>
+<h1>🔢 Maths Fun</h1>
+<div class="modes" id="modes"></div>
+<div id="meta"></div>
+<div id="card">
+  <div id="q"></div>
+  <div id="objects"></div>
+  <div class="opts" id="opts"></div>
+  <div id="order"></div>
+  <div id="msg"></div>
+  <div id="progress"></div>
+</div>
+<script src="common.js"></script>
+<script src="core.js"></script>
+<script>
+/* ---------- Maths engine: difficulty scales with the child's level ---------- */
+const MODES = [
+  {id:'add',   label:'➕ Add',        minLevel:2},
+  {id:'sub',   label:'➖ Subtract',   minLevel:4},
+  {id:'count', label:'🍎 Count',      minLevel:1},
+  {id:'miss',  label:'❓ Missing',    minLevel:3},
+  {id:'order', label:'🔀 Order',      minLevel:2},
+  {id:'cmp',   label:'⚖️ Bigger',     minLevel:2},
+  {id:'even',  label:'🎲 Even/Odd',   minLevel:4},
+  {id:'mul',   label:'✖️ Times',      minLevel:5}
+];
+const THINGS = ['🍎','🐤','⭐','🎈','🐟','🦋','🌸','🍓','🚗','🐢'];
+const ROUND = 5;                       // questions per round
+
+let mode = 'count', qIndex = 0, results = [], current = null;
+
+const $ = id => document.getElementById(id);
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => a.slice().sort(()=>Math.random()-.5);
+
+/** Number ceiling grows with the player's level (1-5). */
+function cap(){
+  const lv = VP.unlockedLevel();
+  return [5,10,10,20,20][lv-1] || 10;
+}
+/** XP difficulty band for the current mode + level. */
+function band(){
+  const lv = VP.unlockedLevel();
+  if(['mul','even','miss'].includes(mode)) return 'hard';
+  if(['add','sub','cmp','order'].includes(mode)) return lv >= 3 ? 'medium' : 'easy';
+  return 'easy';
+}
+
+/* ---------- Question generators (each returns {text, speak, answer, choices, objects}) ---------- */
+const GEN = {
+  count(){
+    const n = 1 + rnd(Math.min(9, cap()));
+    const t = pick(THINGS);
+    return {text:'How many?', speak:'How many do you see?', answer:n,
+            objects:Array(n).fill(t).join(' '), choices:numChoices(n)};
+  },
+  add(){
+    const c = cap(), a = 1+rnd(Math.max(2,Math.floor(c/2))), b = 1+rnd(Math.max(2,c-a));
+    return {text:a+' + '+b+' = ?', speak:'What is '+a+' plus '+b+'?', answer:a+b, choices:numChoices(a+b)};
+  },
+  sub(){
+    const c = cap(), a = 2+rnd(c-1), b = 1+rnd(a-1);
+    return {text:a+' − '+b+' = ?', speak:'What is '+a+' minus '+b+'?', answer:a-b, choices:numChoices(a-b)};
+  },
+  miss(){
+    const c = cap(), b = 1+rnd(Math.max(2,Math.floor(c/2))), sum = b+1+rnd(Math.max(2,c-b));
+    const a = sum-b;
+    return {text:'__ + '+b+' = '+sum, speak:'What number plus '+b+' makes '+sum+'?', answer:a, choices:numChoices(a)};
+  },
+  cmp(){
+    const c = cap();
+    let a = 1+rnd(c), b = 1+rnd(c);
+    while(b===a) b = 1+rnd(c);
+    return {text:'Which is bigger?', speak:'Which is bigger, '+a+' or '+b+'?',
+            answer:Math.max(a,b), choices:shuffle([a,b])};
+  },
+  even(){
+    const n = 1+rnd(cap());
+    return {text:'Is '+n+' even or odd?', speak:'Is '+n+' even or odd?',
+            answer:(n%2===0?'Even':'Odd'), choices:shuffle(['Even','Odd'])};
+  },
+  mul(){
+    const a = 1+rnd(5), b = 1+rnd(5);
+    return {text:a+' × '+b+' = ?', speak:'What is '+a+' times '+b+'?', answer:a*b, choices:numChoices(a*b)};
+  },
+  order(){
+    const c = cap(), set = new Set();
+    while(set.size < 4) set.add(1+rnd(c));
+    const nums = [...set];
+    return {text:'Tap them smallest → biggest', speak:'Tap the numbers from smallest to biggest',
+            answer:nums.slice().sort((x,y)=>x-y), choices:shuffle(nums), ordering:true};
+  }
+};
+/** Build 3 plausible number choices around the answer. */
+function numChoices(ans){
+  const set = new Set([ans]);
+  let guard = 0;
+  while(set.size < 3 && guard++ < 50){
+    const d = 1 + rnd(3);
+    const v = Math.random() < .5 ? ans - d : ans + d;
+    if(v >= 0) set.add(v);
+  }
+  while(set.size < 3) set.add(set.size + ans + 1);
+  return shuffle([...set]);
+}
+
+/* ---------- Rendering ---------- */
+function renderModes(){
+  const box = $('modes'); box.innerHTML = '';
+  const lv = VP.unlockedLevel();
+  MODES.forEach(m=>{
+    const locked = lv < m.minLevel;
+    const b = document.createElement('button');
+    b.textContent = locked ? '🔒 ' + m.label.replace(/^\S+\s/,'') : m.label;
+    b.className = m.id === mode ? 'on' : '';
+    b.setAttribute('aria-label', m.label + (locked ? ' locked' : ''));
+    b.onclick = () => {
+      if(locked){ playSfx('wrong'); say('Reach level '+m.minLevel+' to unlock this game!'); return; }
+      mode = m.id; startRound();
+    };
+    box.appendChild(b);
+  });
+}
+function renderProgress(){
+  $('progress').innerHTML = Array.from({length:ROUND}, (_,i)=>{
+    const r = results[i];
+    return '<span class="'+(r===true?'hit':r===false?'miss':'')+'"></span>';
+  }).join('');
+}
+function startRound(){
+  qIndex = 0; results = [];
+  renderModes();
+  nextQuestion();
+}
+function nextQuestion(){
+  if(qIndex >= ROUND){
+    const perfect = results.every(r=>r===true);
+    VP.finishRound({perfect, track:mode, title: perfect ? 'PERFECT ROUND! 🏆' : 'Round complete! 🎉'});
+    setTimeout(startRound, 800);
+    return;
+  }
+  current = GEN[mode]();
+  $('meta').textContent = 'Question ' + (qIndex+1) + ' of ' + ROUND + '   •   Level ' + VP.unlockedLevel();
+  $('q').textContent = current.text;
+  $('objects').textContent = current.objects || '';
+  $('msg').textContent = '';
+  $('order').innerHTML = '';
+  renderProgress();
+  say(current.speak);
+  current.ordering ? renderOrdering() : renderChoices();
+}
+function renderChoices(){
+  const box = $('opts'); box.innerHTML = '';
+  current.choices.forEach(c=>{
+    const b = document.createElement('button');
+    b.textContent = c;
+    b.setAttribute('aria-label','Answer '+c);
+    b.onclick = () => answer(c, b);
+    box.appendChild(b);
+  });
+}
+function renderOrdering(){
+  const seq = [];
+  const slots = $('order');
+  slots.innerHTML = current.answer.map(()=>'<div class="slot"></div>').join('');
+  const box = $('opts'); box.innerHTML = '';
+  current.choices.forEach(c=>{
+    const b = document.createElement('button');
+    b.textContent = c;
+    b.onclick = () => {
+      if(b.disabled) return;
+      const idx = seq.length;
+      if(c === current.answer[idx]){
+        seq.push(c); b.disabled = true; playSfx('click'); say(String(c));
+        slots.children[idx].textContent = c;
+        if(seq.length === current.answer.length) score(true);
+      }else{
+        b.classList.add('wrong'); playSfx('wrong');
+        setTimeout(()=>b.classList.remove('wrong'), 420);
+        say('Try a smaller number!');
+        VP.wrong();
+      }
+    };
+    box.appendChild(b);
+  });
+}
+function answer(val, btn){
+  if(String(val) === String(current.answer)){
+    btn.classList.add('right');
+    [...$('opts').children].forEach(b=>b.disabled = true);
+    score(true);
+  }else{
+    btn.classList.add('wrong'); btn.disabled = true;
+    playSfx('wrong'); VP.wrong();
+    $('msg').textContent = 'Not quite — try again!';
+    say('Not quite. Try again!');
+  }
+}
+function score(ok){
+  results[qIndex] = ok;
+  renderProgress();
+  playSfx('correct');
+  VP.correct({difficulty: band(), skill:'math', track: mode});
+  const ansText = current.ordering ? 'smallest to biggest' : String(current.answer);
+  $('msg').textContent = '🎉 Yes! ' + (current.ordering ? 'Perfect order!' : current.text.replace('?', current.answer));
+  say('Yes! ' + ansText + '! Well done, ' + cheerName() + '!');
+  qIndex++;
+  setTimeout(nextQuestion, 1500);
+}
+
+/* ---------- Boot: start at the highest mode the child has unlocked ---------- */
+(function init(){
+  const lv = VP.unlockedLevel();
+  const avail = MODES.filter(m=>lv >= m.minLevel);
+  mode = (avail[avail.length-1] || MODES[2]).id;
+  startRound();
+})();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

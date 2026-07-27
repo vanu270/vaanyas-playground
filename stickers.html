@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🎁 Sticker Book — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#a7f3d0,#fbcfe8);display:flex;flex-direction:column;align-items:center;padding:14px}
+h1{color:#0f766e;font-size:1.6rem;margin:6px 0}
+.sub{color:#115e59;margin-bottom:14px;text-align:center}
+.wrap{max-width:800px;width:100%}
+.pack{background:rgba(255,255,255,.88);border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:0 6px 18px rgba(0,0,0,.1)}
+.pack h2{color:#0f766e;font-size:1.15rem;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.pack h2 small{color:#14b8a6;font-size:.85rem}
+.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:10px}
+.st{aspect-ratio:1;border-radius:18px;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:2.3rem;box-shadow:0 4px 0 rgba(0,0,0,.12);transition:transform .2s;cursor:pointer}
+.st:hover{transform:scale(1.12) rotate(-6deg)}
+.st.locked{background:#e2e8f0;color:#94a3b8;font-size:1.5rem;box-shadow:none;cursor:default}
+.st.locked:hover{transform:none}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.badge{background:#fff;border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.12);border:3px solid transparent}
+.badge.got{border-color:#facc15;background:linear-gradient(135deg,#fffbeb,#fef3c7)}
+.badge.locked{filter:grayscale(1);opacity:.5}
+.badge .bi{font-size:2.1rem}
+.badge .bn{font-weight:bold;color:#0f766e;font-size:.9rem;margin-top:3px}
+.badge .bd{color:#14b8a6;font-size:.72rem;margin-top:2px}
+</style>
+</head>
+<body>
+<h1>🎁 My Sticker Book</h1>
+<p class="sub" id="sub"></p>
+<div class="wrap">
+  <div class="pack">
+    <h2>🏅 Achievements <small id="badgeCount"></small></h2>
+    <div class="badges" id="badges"></div>
+  </div>
+  <div id="packs"></div>
+</div>
+<script src="common.js"></script>
+<script src="core.js"></script>
+<script>
+const st = VP.stats();
+const owned = new Set(st.stickers);
+
+document.getElementById('sub').textContent =
+  (kidName() ? kidName() + ' has ' : 'You have ') + st.stickers.length + ' of ' +
+  VPData.ALL_STICKERS.length + ' stickers — play games to unlock more!';
+
+document.getElementById('badgeCount').textContent =
+  st.achievements.filter(a=>a.got).length + ' / ' + st.achievements.length;
+
+document.getElementById('badges').innerHTML = st.achievements.map(a=>
+  '<div class="badge ' + (a.got ? 'got' : 'locked') + '">' +
+    '<div class="bi">' + (a.got ? a.icon : '🔒') + '</div>' +
+    '<div class="bn">' + a.name + '</div>' +
+    '<div class="bd">' + a.desc + '</div></div>').join('');
+
+document.getElementById('packs').innerHTML = Object.entries(VPData.STICKER_PACKS).map(([pack, list])=>{
+  const have = list.filter(e=>owned.has(pack + ':' + e)).length;
+  return '<div class="pack"><h2>' + pack + ' <small>' + have + ' / ' + list.length + '</small></h2><div class="row">' +
+    list.map(e=>{
+      const got = owned.has(pack + ':' + e);
+      return '<div class="st' + (got ? '' : ' locked') + '" data-e="' + e + '" data-p="' + pack + '">' + (got ? e : '🔒') + '</div>';
+    }).join('') + '</div></div>';
+}).join('');
+
+// tap an unlocked sticker to hear it celebrated
+document.querySelectorAll('.st:not(.locked)').forEach(el=>{
+  el.onclick = ()=>{ playSfx('pop'); say(el.dataset.p + ' sticker!'); };
+});
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>
