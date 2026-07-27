@@ -1,7 +1,8 @@
-const CACHE='vp-v3';
-const FILES=['./','index.html','letters.html','counting.html','shapes.html','animals.html','balloons.html','paint.html',
-  'math.html','memory.html','patterns.html','stickers.html','parents.html',
-  'common.js','core.js','manifest.json','icon-192.png','icon-512.png'];
+const CACHE='vp-v4';
+const FILES=['./','index.html','world.html','math.html','english.html','science.html','logic.html',
+  'letters.html','counting.html','shapes.html','animals.html','balloons.html','paint.html',
+  'memory.html','patterns.html','stickers.html','parents.html',
+  'common.js','data.js','core.js','manifest.json','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()));
 });

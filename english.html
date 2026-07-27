@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>📚 Word World — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#e9d5ff,#fce7f3);display:flex;flex-direction:column;align-items:center;padding:12px 12px 92px}
+h1{color:#7e22ce;font-size:1.4rem;margin:4px 0}
+.modes{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:780px}
+.modes button{font-size:.85rem;font-weight:bold;padding:9px 11px;border:none;border-radius:13px;background:#fff;color:#7e22ce;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px;font-family:inherit}
+.modes button.on{background:#7e22ce;color:#fff}
+.modes button.lock{opacity:.5}
+#meta{color:#6b21a8;font-size:.95rem;margin-bottom:8px;text-align:center}
+#blanks{font-size:2.6rem;font-weight:bold;color:#7e22ce;letter-spacing:12px;margin:10px 0}
+</style>
+</head>
+<body>
+<h1>📚 Word World</h1>
+<div class="modes" id="modes"></div>
+<div id="meta"></div>
+<div class="q-wrap" id="quiz"></div>
+<script src="common.js"></script>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script>
+const W = VPContent.WORDS, SPELL = VPContent.SPELL, SIGHT = VPContent.SIGHT_WORDS,
+      RHYMES = VPContent.RHYMES, SENTENCES = VPContent.SENTENCES;
+const L = Object.keys(W);
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => a.slice().sort(()=>Math.random()-.5);
+const others = (all, not, n) => shuffle(all.filter(x=>x !== not)).slice(0, n);
+
+const GEN = {
+  letter(a){
+    const t = pick(L);
+    return {prompt:'Find the letter <b>' + t + '</b>', answer:t,
+      choices: shuffle([t, ...others(L, t, a === 0 ? 2 : 3)]),
+      speak:'Find the letter ' + t, hint:'Look for the shape of ' + t + '.', difficulty:'easy'};
+  },
+  case(a){
+    const t = pick(L), lower = Math.random() < .5;
+    const shown = lower ? t.toLowerCase() : t;
+    const want  = lower ? t : t.toLowerCase();
+    return {prompt:'Which is the ' + (lower ? '<b>big</b>' : '<b>small</b>') + ' letter for <b>' + shown + '</b>?',
+      answer:want, choices: shuffle([want, ...others(L, t, 2).map(x=>lower ? x : x.toLowerCase())]),
+      speak:'Which is the ' + (lower ? 'big' : 'small') + ' letter for ' + t + '?',
+      hint:'Big and small letters make the same sound.', difficulty:'medium'};
+  },
+  picture(a){
+    const t = pick(L), [word, emoji] = W[t];
+    return {prompt:'Which letter does this start with?', visual:emoji + '<br><span style="font-size:1.3rem">' + word + '</span>',
+      answer:t, choices: shuffle([t, ...others(L, t, a === 0 ? 2 : 3)]),
+      speak:word + '. Which letter does ' + word + ' start with?',
+      hint: word + ' starts with the ' + t + ' sound.', difficulty:'medium'};
+  },
+  begin(a){
+    const t = pick(L), [word, emoji] = W[t];
+    const wrongs = others(L, t, 2).map(x=>W[x][1]);
+    return {prompt:'Which picture starts with <b>' + t + '</b>?',
+      answer:emoji, choices: shuffle([emoji, ...wrongs]),
+      speak:'Which picture starts with the letter ' + t + '?',
+      hint:t + ' is for ' + word + '.', difficulty:'medium'};
+  },
+  end(a){
+    const words = ['cat','dog','sun','bus','hat','pen','cup','bag','net','pig'];
+    const w = pick(words), last = w[w.length-1].toUpperCase();
+    return {prompt:'What is the <b>last</b> sound in "<b>' + w + '</b>"?',
+      answer:last, choices: shuffle([last, ...others(L, last, 2)]),
+      speak:'What is the last sound in ' + w + '?',
+      hint:'Say it slowly: ' + w.split('').join(' - '), difficulty:'hard'};
+  },
+  missing(a){
+    const [word, emoji] = pick(SPELL);
+    const i = 1 + rnd(word.length - 1);
+    const shown = word.split('').map((c,j)=>j === i ? '_' : c).join(' ');
+    return {prompt:'Which letter is missing?', visual: emoji + '<br>' + shown,
+      answer:word[i], choices: shuffle([word[i], ...others(L, word[i], 2)]),
+      speak:'Which letter is missing in ' + word + '?',
+      hint:'The word is ' + word + '.', difficulty:'medium'};
+  },
+  spell(a){
+    const [word, emoji] = pick(SPELL.filter(x=>a === 2 ? true : x[0].length <= 3));
+    return {prompt:'Spell <b>' + word + '</b> — which letter comes first?',
+      visual: emoji, answer: word[0],
+      choices: shuffle([word[0], ...others(L, word[0], 2)]),
+      speak:'Spell ' + word + '. ' + word.split('').join(', ') + '. Which letter comes first?',
+      hint: word + ' begins with ' + word[0] + '.', difficulty:'hard'};
+  },
+  sight(a){
+    const t = pick(SIGHT);
+    return {prompt:'Which word says <b>' + t + '</b>?', answer:t,
+      choices: shuffle([t, ...others(SIGHT, t, 2)]),
+      speak:'Which word says ' + t + '?',
+      hint:'Sound it out: ' + t.split('').join(' - '), difficulty:'hard'};
+  },
+  rhyme(a){
+    const [base, good, bad] = pick(RHYMES);
+    const right = pick(good);
+    return {prompt:'Which word <b>rhymes</b> with "<b>' + base + '</b>"?',
+      answer:right, choices: shuffle([right, ...shuffle(bad).slice(0,2)]),
+      speak:'Which word rhymes with ' + base + '?',
+      hint:'Rhyming words sound the same at the end.', difficulty:'hard'};
+  },
+  sentence(a){
+    const s = pick(SENTENCES);
+    const emoji = s[1], word = s[2];
+    const sentence = s[0] + ' ___ ' + (s[3] || '');
+    return {prompt:'Finish the sentence:<br><b>' + sentence.trim() + '</b>',
+      visual: emoji, answer: word,
+      choices: shuffle([word, ...others(SENTENCES.map(x=>x[2]), word, 2)]),
+      speak:'Finish the sentence. ' + s[0] + ' what?',
+      hint:'Look at the picture!', difficulty:'hard'};
+  }
+};
+GEN.mixed = a => {
+  const lv = VP.unlockedLevel();
+  const ids = MODES.filter(m=>m.id !== 'mixed' && lv >= m.min).map(m=>m.id);
+  return GEN[pick(ids.length ? ids : ['letter'])](a);
+};
+
+const MODES = [
+  {id:'letter',  label:'🔤 Find Letter', min:1}, {id:'case',    label:'Aa Big & Small', min:2},
+  {id:'picture', label:'🍎 Letter+Pic',  min:2}, {id:'begin',   label:'🅰️ First Sound', min:3},
+  {id:'missing', label:'␣ Missing',      min:3}, {id:'end',     label:'🔚 Last Sound',  min:4},
+  {id:'spell',   label:'✏️ Spelling',     min:4}, {id:'sight',   label:'👁️ Sight Words', min:4},
+  {id:'rhyme',   label:'🎵 Rhymes',      min:5}, {id:'sentence',label:'📝 Sentences',   min:5},
+  {id:'mixed',   label:'📚 Challenge',   min:4}
+];
+
+let mode = new URLSearchParams(location.search).get('mode') || 'letter';
+if(!GEN[mode]) mode = 'letter';
+
+function renderModes(){
+  const lv = VP.unlockedLevel(), box = document.getElementById('modes');
+  box.innerHTML = '';
+  MODES.forEach(m=>{
+    const locked = lv < m.min;
+    const b = document.createElement('button');
+    b.textContent = locked ? '🔒 ' + m.label.replace(/^\S+\s/,'') : m.label;
+    b.className = (m.id === mode ? 'on ' : '') + (locked ? 'lock' : '');
+    b.onclick = ()=>{
+      if(locked){ playSfx('wrong'); Mascot.say('Reach level ' + m.min + ' to unlock this one!'); return; }
+      mode = m.id; start();
+    };
+    box.appendChild(b);
+  });
+}
+function start(){
+  renderModes();
+  const m = MODES.find(x=>x.id === mode) || MODES[0];
+  document.getElementById('meta').textContent = m.label.replace(/^\S+\s/,'') + '   •   Level ' + VP.unlockedLevel();
+  new Quiz({generate: GEN[mode], skill:'letters', track:'letters', round:5, mount: document.getElementById('quiz')});
+}
+start();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

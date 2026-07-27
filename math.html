@@ -9,254 +9,248 @@
 <title>🔢 Maths Fun — Vaanya's Playground</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
-body{min-height:100vh;background:linear-gradient(135deg,#bfdbfe,#fbcfe8);display:flex;flex-direction:column;align-items:center;padding:12px}
-h1{color:#1d4ed8;font-size:1.5rem;margin:6px 0}
-.modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:760px}
-.modes button{font-size:.95rem;font-weight:bold;padding:10px 12px;border:none;border-radius:14px;background:#fff;color:#1d4ed8;
-  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px}
+body{min-height:100vh;background:linear-gradient(135deg,#bfdbfe,#fbcfe8);display:flex;flex-direction:column;align-items:center;padding:12px 12px 92px}
+h1{color:#1d4ed8;font-size:1.4rem;margin:4px 0}
+.modes{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:780px}
+.modes button{font-size:.85rem;font-weight:bold;padding:9px 11px;border:none;border-radius:13px;background:#fff;color:#1d4ed8;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px;font-family:inherit}
 .modes button.on{background:#1d4ed8;color:#fff}
-#meta{color:#1e40af;font-size:1rem;margin-bottom:6px}
-#card{background:rgba(255,255,255,.85);border-radius:28px;padding:22px 18px;max-width:640px;width:100%;text-align:center;
-  box-shadow:0 8px 24px rgba(0,0,0,.12)}
-#q{font-size:clamp(2rem,9vw,3.4rem);font-weight:bold;color:#1e3a8a;margin-bottom:8px;line-height:1.25}
-#objects{font-size:2.4rem;line-height:1.5;margin-bottom:10px;word-break:break-word}
-.opts{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:12px}
-.opts button{font-size:2.2rem;font-weight:bold;min-width:88px;height:88px;padding:0 10px;border:none;border-radius:22px;background:#fff;color:#1d4ed8;
-  box-shadow:0 6px 0 rgba(0,0,0,.15);cursor:pointer}
-.opts button:active{transform:translateY(3px)}
-.opts button.right{background:#22c55e;color:#fff;animation:party .5s}
-.opts button.wrong{background:#fca5a5;animation:shake .4s}
-.opts button:disabled{opacity:.5}
-@keyframes party{50%{transform:scale(1.25) rotate(6deg)}}
-@keyframes shake{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
-#order{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px;min-height:70px}
-#order .slot{width:64px;height:64px;border-radius:16px;border:3px dashed #93c5fd;display:flex;align-items:center;justify-content:center;
-  font-size:1.8rem;font-weight:bold;color:#1d4ed8;background:#fff}
-#msg{margin-top:12px;font-size:1.15rem;color:#1e40af;font-weight:bold;min-height:1.6rem}
-#progress{display:flex;gap:6px;justify-content:center;margin-top:12px}
-#progress span{width:16px;height:16px;border-radius:50%;background:#dbeafe;border:2px solid #93c5fd}
-#progress span.hit{background:#22c55e;border-color:#16a34a}
-#progress span.miss{background:#fca5a5;border-color:#ef4444}
+.modes button.lock{opacity:.5}
+#meta{color:#1e40af;font-size:.95rem;margin-bottom:8px;text-align:center}
+.nline{display:flex;justify-content:center;gap:2px;flex-wrap:wrap;margin:6px 0}
+.nline b{width:30px;height:30px;border-radius:8px;background:#dbeafe;color:#1e3a8a;display:flex;align-items:center;
+  justify-content:center;font-size:.85rem}
+.nline b.on{background:#22c55e;color:#fff}
+.nline b.from{background:#f59e0b;color:#fff}
 </style>
 </head>
 <body>
 <h1>🔢 Maths Fun</h1>
 <div class="modes" id="modes"></div>
 <div id="meta"></div>
-<div id="card">
-  <div id="q"></div>
-  <div id="objects"></div>
-  <div class="opts" id="opts"></div>
-  <div id="order"></div>
-  <div id="msg"></div>
-  <div id="progress"></div>
-</div>
+<div class="q-wrap" id="quiz"></div>
 <script src="common.js"></script>
+<script src="data.js"></script>
 <script src="core.js"></script>
 <script>
-/* ---------- Maths engine: difficulty scales with the child's level ---------- */
-const MODES = [
-  {id:'add',   label:'➕ Add',        minLevel:2},
-  {id:'sub',   label:'➖ Subtract',   minLevel:4},
-  {id:'count', label:'🍎 Count',      minLevel:1},
-  {id:'miss',  label:'❓ Missing',    minLevel:3},
-  {id:'order', label:'🔀 Order',      minLevel:2},
-  {id:'cmp',   label:'⚖️ Bigger',     minLevel:2},
-  {id:'even',  label:'🎲 Even/Odd',   minLevel:4},
-  {id:'mul',   label:'✖️ Times',      minLevel:5}
-];
-const THINGS = ['🍎','🐤','⭐','🎈','🐟','🦋','🌸','🍓','🚗','🐢'];
-const ROUND = 5;                       // questions per round
+/* =========================================================
+   Every mode is one generator: (adapt) => question object.
+   adapt: 0 = struggling (easier + hints), 1 = normal, 2 = stretch
+   ========================================================= */
+const THINGS = ['🍎','🐤','⭐','🎈','🐟','🦋','🌸','🍓','🚗','🐢','🍪','🐞'];
+const NUMWORDS = ['zero','one','two','three','four','five','six','seven','eight','nine','ten',
+  'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
 
-let mode = 'count', qIndex = 0, results = [], current = null;
-
-const $ = id => document.getElementById(id);
 const rnd = n => Math.floor(Math.random()*n);
 const pick = a => a[rnd(a.length)];
 const shuffle = a => a.slice().sort(()=>Math.random()-.5);
+const rep = (t,n) => Array(n).fill(t).join(' ');
 
-/** Number ceiling grows with the player's level (1-5). */
-function cap(){
-  const lv = VP.unlockedLevel();
-  return [5,10,10,20,20][lv-1] || 10;
+/** number ceiling: player level, nudged by adaptive performance */
+function cap(adapt){
+  const base = [5,10,10,20,20][VP.unlockedLevel()-1] || 10;
+  if(adapt === 0) return Math.max(5, Math.round(base * 0.6));
+  if(adapt === 2) return Math.round(base * 1.4);
+  return base;
 }
-/** XP difficulty band for the current mode + level. */
-function band(){
-  const lv = VP.unlockedLevel();
-  if(['mul','even','miss'].includes(mode)) return 'hard';
-  if(['add','sub','cmp','order'].includes(mode)) return lv >= 3 ? 'medium' : 'easy';
-  return 'easy';
-}
-
-/* ---------- Question generators (each returns {text, speak, answer, choices, objects}) ---------- */
-const GEN = {
-  count(){
-    const n = 1 + rnd(Math.min(9, cap()));
-    const t = pick(THINGS);
-    return {text:'How many?', speak:'How many do you see?', answer:n,
-            objects:Array(n).fill(t).join(' '), choices:numChoices(n)};
-  },
-  add(){
-    const c = cap(), a = 1+rnd(Math.max(2,Math.floor(c/2))), b = 1+rnd(Math.max(2,c-a));
-    return {text:a+' + '+b+' = ?', speak:'What is '+a+' plus '+b+'?', answer:a+b, choices:numChoices(a+b)};
-  },
-  sub(){
-    const c = cap(), a = 2+rnd(c-1), b = 1+rnd(a-1);
-    return {text:a+' − '+b+' = ?', speak:'What is '+a+' minus '+b+'?', answer:a-b, choices:numChoices(a-b)};
-  },
-  miss(){
-    const c = cap(), b = 1+rnd(Math.max(2,Math.floor(c/2))), sum = b+1+rnd(Math.max(2,c-b));
-    const a = sum-b;
-    return {text:'__ + '+b+' = '+sum, speak:'What number plus '+b+' makes '+sum+'?', answer:a, choices:numChoices(a)};
-  },
-  cmp(){
-    const c = cap();
-    let a = 1+rnd(c), b = 1+rnd(c);
-    while(b===a) b = 1+rnd(c);
-    return {text:'Which is bigger?', speak:'Which is bigger, '+a+' or '+b+'?',
-            answer:Math.max(a,b), choices:shuffle([a,b])};
-  },
-  even(){
-    const n = 1+rnd(cap());
-    return {text:'Is '+n+' even or odd?', speak:'Is '+n+' even or odd?',
-            answer:(n%2===0?'Even':'Odd'), choices:shuffle(['Even','Odd'])};
-  },
-  mul(){
-    const a = 1+rnd(5), b = 1+rnd(5);
-    return {text:a+' × '+b+' = ?', speak:'What is '+a+' times '+b+'?', answer:a*b, choices:numChoices(a*b)};
-  },
-  order(){
-    const c = cap(), set = new Set();
-    while(set.size < 4) set.add(1+rnd(c));
-    const nums = [...set];
-    return {text:'Tap them smallest → biggest', speak:'Tap the numbers from smallest to biggest',
-            answer:nums.slice().sort((x,y)=>x-y), choices:shuffle(nums), ordering:true};
-  }
-};
-/** Build 3 plausible number choices around the answer. */
-function numChoices(ans){
-  const set = new Set([ans]);
-  let guard = 0;
-  while(set.size < 3 && guard++ < 50){
-    const d = 1 + rnd(3);
+function numChoices(ans, span){
+  const set = new Set([ans]); let g = 0;
+  while(set.size < 3 && g++ < 60){
+    const d = 1 + rnd(span || 3);
     const v = Math.random() < .5 ? ans - d : ans + d;
     if(v >= 0) set.add(v);
   }
-  while(set.size < 3) set.add(set.size + ans + 1);
+  while(set.size < 3) set.add(ans + set.size + 1);
   return shuffle([...set]);
 }
+function numberLine(max, from, to){
+  let h = '<div class="nline">';
+  for(let i = 0; i <= max; i++){
+    const cls = i === to ? 'on' : i === from ? 'from' : '';
+    h += '<b class="' + cls + '">' + i + '</b>';
+  }
+  return h + '</div>';
+}
 
-/* ---------- Rendering ---------- */
-function renderModes(){
-  const box = $('modes'); box.innerHTML = '';
+const GEN = {
+  /* ---- counting & number sense ---- */
+  count(a){
+    const n = 1 + rnd(Math.min(9, cap(a)));
+    const t = pick(THINGS);
+    return {prompt:'How many do you see?', visual:rep(t,n), answer:n, choices:numChoices(n,2),
+      hint:'Point at each one and count out loud.', difficulty:'easy', answerSpeak:'There are ' + n + '.'};
+  },
+  recognise(a){
+    const n = rnd(Math.min(20, cap(a)) + 1);
+    return {prompt:'Which one is <b>' + NUMWORDS[n] + '</b>?', answer:n, choices:numChoices(n,3),
+      speak:'Which one is ' + NUMWORDS[n] + '?', hint:'Listen again: ' + NUMWORDS[n] + '.', difficulty:'easy'};
+  },
+  order(a){
+    const c = cap(a), set = new Set();
+    while(set.size < 3) set.add(1 + rnd(c));
+    const nums = [...set], sorted = nums.slice().sort((x,y)=>x-y);
+    return {prompt:'Which is the <b>smallest</b>?', visual:nums.join('&nbsp;&nbsp;'), answer:sorted[0],
+      choices:shuffle(nums), speak:'Which number is the smallest?',
+      hint:'Smallest means the littlest number.', difficulty:'easy'};
+  },
+  beforeAfter(a){
+    const c = cap(a), n = 2 + rnd(c - 2);
+    const after = Math.random() < .5;
+    return {prompt:'What comes <b>' + (after ? 'after' : 'before') + '</b> ' + n + '?',
+      visual: after ? n + ' → ?' : '? → ' + n,
+      answer: after ? n+1 : n-1, choices:numChoices(after ? n+1 : n-1, 2),
+      speak:'What number comes ' + (after ? 'after ' : 'before ') + n + '?',
+      hint: after ? 'Count one more than ' + n + '.' : 'Count one less than ' + n + '.', difficulty:'medium'};
+  },
+  /* ---- addition family ---- */
+  padd(a){
+    const c = Math.min(6, cap(a)), x = 1 + rnd(c), y = 1 + rnd(c), t = pick(THINGS);
+    return {prompt:'How many altogether?',
+      visual: rep(t,x) + ' <b>+</b> ' + rep(t,y) + ' <b>= ?</b>',
+      answer:x+y, choices:numChoices(x+y,2), speak:'How many altogether?',
+      hint:'Count them all together, one by one.', difficulty:'easy',
+      answerSpeak:x + ' plus ' + y + ' is ' + (x+y) + '.'};
+  },
+  add(a){
+    const c = cap(a), x = 1 + rnd(Math.max(2, Math.floor(c/2))), y = 1 + rnd(Math.max(2, c - x));
+    const q = {prompt: x + ' + ' + y + ' = ?', answer:x+y, choices:numChoices(x+y,3),
+      speak:'What is ' + x + ' plus ' + y + '?', difficulty: c > 10 ? 'hard' : 'medium',
+      hint:'Start at ' + x + ' and count on ' + y + ' more.',
+      answerSpeak: x + ' plus ' + y + ' is ' + (x+y) + '.'};
+    if(a === 0) q.visual = rep('🔵',x) + ' + ' + rep('🟡',y);   // struggling? show objects
+    return q;
+  },
+  nline(a){
+    const c = Math.min(10, cap(a)), from = rnd(c-2), step = 1 + rnd(c - from);
+    return {prompt:'Start at <b>' + from + '</b> and hop <b>' + step + '</b> forward. Where do you land?',
+      visual:numberLine(c, from, from + step),
+      answer:from+step, choices:numChoices(from+step,2),
+      speak:'Start at ' + from + ' and hop ' + step + ' forward. Where do you land?',
+      hint:'The orange box is where you start. Count the hops.', difficulty:'medium'};
+  },
+  /* ---- subtraction family ---- */
+  psub(a){
+    const c = Math.min(9, cap(a)), x = 3 + rnd(c-2), y = 1 + rnd(x-1), t = pick(THINGS);
+    return {prompt:'Take away ' + y + '. How many are left?',
+      visual: rep(t, x-y) + ' ' + Array(y).fill('❌').join(' '),
+      answer:x-y, choices:numChoices(x-y,2), speak:'We had ' + x + ' and we take away ' + y + '. How many are left?',
+      hint:'Count only the ones that are not crossed out.', difficulty:'easy',
+      answerSpeak: x + ' take away ' + y + ' is ' + (x-y) + '.'};
+  },
+  sub(a){
+    const c = cap(a), x = 2 + rnd(c-1), y = 1 + rnd(x-1);
+    const q = {prompt: x + ' − ' + y + ' = ?', answer:x-y, choices:numChoices(x-y,3),
+      speak:'What is ' + x + ' take away ' + y + '?', difficulty: c > 10 ? 'hard' : 'medium',
+      hint:'Start at ' + x + ' and count back ' + y + '.',
+      answerSpeak: x + ' take away ' + y + ' is ' + (x-y) + '.'};
+    if(a === 0) q.visual = rep('🔵', x-y) + ' ' + rep('❌', y);
+    return q;
+  },
+  miss(a){
+    const c = cap(a), b = 1 + rnd(Math.max(2, Math.floor(c/2))), sum = b + 1 + rnd(Math.max(2, c-b));
+    return {prompt:'<b>__</b> + ' + b + ' = ' + sum, answer:sum-b, choices:numChoices(sum-b,2),
+      speak:'What number plus ' + b + ' makes ' + sum + '?',
+      hint:'Try counting up from ' + b + ' to ' + sum + '.', difficulty:'hard'};
+  },
+  /* ---- comparing ---- */
+  cmp(a){
+    const c = cap(a); let x = 1 + rnd(c), y = 1 + rnd(c);
+    while(y === x) y = 1 + rnd(c);
+    const big = Math.random() < .5;
+    return {prompt:'Which is <b>' + (big ? 'bigger' : 'smaller') + '</b>?', visual: x + ' &nbsp; or &nbsp; ' + y,
+      answer: big ? Math.max(x,y) : Math.min(x,y), choices:shuffle([x,y]),
+      speak:'Which is ' + (big ? 'bigger' : 'smaller') + ', ' + x + ' or ' + y + '?',
+      hint:'The bigger number is further along when you count.', difficulty:'easy'};
+  },
+  equal(a){
+    const c = Math.min(10, cap(a)), x = 1 + rnd(c), y = 1 + rnd(Math.max(1, x-1));
+    const sum = x + y;
+    return {prompt:'Which one is <b>equal to</b> ' + sum + '?',
+      answer: x + ' + ' + y, choices: shuffle([x + ' + ' + y, (x+1) + ' + ' + y, x + ' + ' + (y+2)]),
+      speak:'Which one is equal to ' + sum + '?',
+      hint:'Equal means exactly the same amount.', difficulty:'hard'};
+  },
+  evenodd(a){
+    const n = 1 + rnd(cap(a));
+    return {prompt:'Is <b>' + n + '</b> even or odd?',
+      visual: a === 0 ? rep('🔵', n) : '',
+      answer: n % 2 === 0 ? 'Even' : 'Odd', choices: shuffle(['Even','Odd']),
+      speak:'Is ' + n + ' even or odd?',
+      hint:'Even numbers can split into two equal groups.', difficulty:'hard'};
+  },
+  skip(a){
+    const step = pick(a === 2 ? [2,5,10] : [2,5]);
+    const start = step * (1 + rnd(3));
+    const seq = [start, start+step, start+step*2, start+step*3];
+    return {prompt:'Count by <b>' + step + '</b>. What comes next?',
+      visual: seq.join(', ') + ', ?', answer: start + step*4,
+      choices: numChoices(start + step*4, step),
+      speak:'Count by ' + step + '. ' + seq.join(', ') + '. What comes next?',
+      hint:'Add ' + step + ' to the last number.', difficulty:'hard'};
+  },
+  mul(a){
+    const m = a === 2 ? 6 : 5, x = 1 + rnd(m), y = 1 + rnd(m);
+    return {prompt: x + ' × ' + y + ' = ?',
+      visual: Array(x).fill(rep('🔵', y)).join('<br>'),
+      answer:x*y, choices:numChoices(x*y,3),
+      speak:'What is ' + x + ' times ' + y + '?',
+      hint:x + ' rows of ' + y + '. Count them all.', difficulty:'hard'};
+  },
+  div(a){
+    const y = 2 + rnd(3), ans = 1 + rnd(4), x = y * ans, t = pick(THINGS);
+    return {prompt:'Share ' + x + ' ' + t + ' between ' + y + ' friends. How many each?',
+      visual: rep(t, x), answer:ans, choices:numChoices(ans,2),
+      speak:'Share ' + x + ' between ' + y + ' friends. How many does each friend get?',
+      hint:'Give one to each friend, then go round again.', difficulty:'hard'};
+  }
+};
+
+/* mixed mode for Treasure Kingdom */
+GEN.mixed = a => {
   const lv = VP.unlockedLevel();
+  const ids = MODES.filter(m => m.id !== 'mixed' && lv >= m.min).map(m=>m.id);
+  return GEN[pick(ids.length ? ids : ['add'])](a);
+};
+
+const MODES = [
+  {id:'count', label:'🍎 Count', min:1},   {id:'recognise', label:'🔢 Numbers', min:1},
+  {id:'order', label:'🔀 Smallest', min:1},{id:'beforeAfter', label:'↔️ Before/After', min:2},
+  {id:'padd', label:'🍎 Picture +', min:2},{id:'add', label:'➕ Add', min:2},
+  {id:'nline', label:'📏 Number Line', min:3},{id:'psub', label:'🍪 Picture −', min:3},
+  {id:'sub', label:'➖ Subtract', min:3},  {id:'miss', label:'❓ Missing', min:3},
+  {id:'cmp', label:'⚖️ Compare', min:2},   {id:'equal', label:'🟰 Equal', min:3},
+  {id:'evenodd', label:'🎲 Even/Odd', min:4},{id:'skip', label:'🦘 Skip Count', min:4},
+  {id:'mul', label:'✖️ Times', min:5},     {id:'div', label:'➗ Share', min:5},
+  {id:'mixed', label:'🧮 Challenge', min:4}
+];
+
+let mode = new URLSearchParams(location.search).get('mode') || 'count';
+if(!GEN[mode]) mode = 'count';
+let quiz = null;
+
+function renderModes(){
+  const lv = VP.unlockedLevel(), box = document.getElementById('modes');
+  box.innerHTML = '';
   MODES.forEach(m=>{
-    const locked = lv < m.minLevel;
+    const locked = lv < m.min;
     const b = document.createElement('button');
     b.textContent = locked ? '🔒 ' + m.label.replace(/^\S+\s/,'') : m.label;
-    b.className = m.id === mode ? 'on' : '';
-    b.setAttribute('aria-label', m.label + (locked ? ' locked' : ''));
-    b.onclick = () => {
-      if(locked){ playSfx('wrong'); say('Reach level '+m.minLevel+' to unlock this game!'); return; }
-      mode = m.id; startRound();
+    b.className = (m.id === mode ? 'on ' : '') + (locked ? 'lock' : '');
+    b.onclick = ()=>{
+      if(locked){ playSfx('wrong'); Mascot.say('Reach level ' + m.min + ' to unlock this one!'); return; }
+      mode = m.id; start();
     };
     box.appendChild(b);
   });
 }
-function renderProgress(){
-  $('progress').innerHTML = Array.from({length:ROUND}, (_,i)=>{
-    const r = results[i];
-    return '<span class="'+(r===true?'hit':r===false?'miss':'')+'"></span>';
-  }).join('');
-}
-function startRound(){
-  qIndex = 0; results = [];
+function start(){
   renderModes();
-  nextQuestion();
+  const m = MODES.find(x=>x.id === mode) || MODES[0];
+  document.getElementById('meta').textContent = m.label.replace(/^\S+\s/,'') + '   •   Level ' + VP.unlockedLevel();
+  quiz = new Quiz({generate: GEN[mode], skill:'math', track: mode === 'mixed' ? 'add' : mode, round:5,
+                   mount: document.getElementById('quiz')});
 }
-function nextQuestion(){
-  if(qIndex >= ROUND){
-    const perfect = results.every(r=>r===true);
-    VP.finishRound({perfect, track:mode, title: perfect ? 'PERFECT ROUND! 🏆' : 'Round complete! 🎉'});
-    setTimeout(startRound, 800);
-    return;
-  }
-  current = GEN[mode]();
-  $('meta').textContent = 'Question ' + (qIndex+1) + ' of ' + ROUND + '   •   Level ' + VP.unlockedLevel();
-  $('q').textContent = current.text;
-  $('objects').textContent = current.objects || '';
-  $('msg').textContent = '';
-  $('order').innerHTML = '';
-  renderProgress();
-  say(current.speak);
-  current.ordering ? renderOrdering() : renderChoices();
-}
-function renderChoices(){
-  const box = $('opts'); box.innerHTML = '';
-  current.choices.forEach(c=>{
-    const b = document.createElement('button');
-    b.textContent = c;
-    b.setAttribute('aria-label','Answer '+c);
-    b.onclick = () => answer(c, b);
-    box.appendChild(b);
-  });
-}
-function renderOrdering(){
-  const seq = [];
-  const slots = $('order');
-  slots.innerHTML = current.answer.map(()=>'<div class="slot"></div>').join('');
-  const box = $('opts'); box.innerHTML = '';
-  current.choices.forEach(c=>{
-    const b = document.createElement('button');
-    b.textContent = c;
-    b.onclick = () => {
-      if(b.disabled) return;
-      const idx = seq.length;
-      if(c === current.answer[idx]){
-        seq.push(c); b.disabled = true; playSfx('click'); say(String(c));
-        slots.children[idx].textContent = c;
-        if(seq.length === current.answer.length) score(true);
-      }else{
-        b.classList.add('wrong'); playSfx('wrong');
-        setTimeout(()=>b.classList.remove('wrong'), 420);
-        say('Try a smaller number!');
-        VP.wrong();
-      }
-    };
-    box.appendChild(b);
-  });
-}
-function answer(val, btn){
-  if(String(val) === String(current.answer)){
-    btn.classList.add('right');
-    [...$('opts').children].forEach(b=>b.disabled = true);
-    score(true);
-  }else{
-    btn.classList.add('wrong'); btn.disabled = true;
-    playSfx('wrong'); VP.wrong();
-    $('msg').textContent = 'Not quite — try again!';
-    say('Not quite. Try again!');
-  }
-}
-function score(ok){
-  results[qIndex] = ok;
-  renderProgress();
-  playSfx('correct');
-  VP.correct({difficulty: band(), skill:'math', track: mode});
-  const ansText = current.ordering ? 'smallest to biggest' : String(current.answer);
-  $('msg').textContent = '🎉 Yes! ' + (current.ordering ? 'Perfect order!' : current.text.replace('?', current.answer));
-  say('Yes! ' + ansText + '! Well done, ' + cheerName() + '!');
-  qIndex++;
-  setTimeout(nextQuestion, 1500);
-}
-
-/* ---------- Boot: start at the highest mode the child has unlocked ---------- */
-(function init(){
-  const lv = VP.unlockedLevel();
-  const avail = MODES.filter(m=>lv >= m.minLevel);
-  mode = (avail[avail.length-1] || MODES[2]).id;
-  startRound();
-})();
+start();
 </script>
 <script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>

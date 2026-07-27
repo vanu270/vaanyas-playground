@@ -36,6 +36,12 @@ h1{color:#4338ca;font-size:1.5rem;margin:6px 0;text-align:center}
 .actions a,.actions button{background:#fff;border:none;border-radius:16px;padding:12px 18px;color:#4338ca;font-weight:bold;
   text-decoration:none;box-shadow:0 4px 0 rgba(0,0,0,.1);cursor:pointer;font-family:inherit;font-size:.92rem}
 .actions .danger{color:#b91c1c}
+.row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:#eef2ff;margin-bottom:8px;color:#4338ca;font-weight:bold;cursor:pointer;font-size:.95rem}
+.row input{width:22px;height:22px;accent-color:#4338ca;cursor:pointer}
+.wrow{margin-bottom:9px}
+.wrow .t{display:flex;justify-content:space-between;color:#4338ca;font-size:.9rem;font-weight:bold;margin-bottom:3px;gap:8px}
+.wrow .b{height:14px;background:#e0e7ff;border-radius:99px;overflow:hidden}
+.wrow .b i{display:block;height:100%;border-radius:99px;transition:width .9s}
 .note{color:#6366f1;font-size:.8rem;text-align:center;margin-top:12px;line-height:1.5}
 </style>
 </head>
@@ -60,8 +66,19 @@ h1{color:#4338ca;font-size:1.5rem;margin:6px 0;text-align:center}
     <div class="insight" id="insight"></div>
   </div>
 
+  <div class="panel">
+    <h2>🗺️ Adventure progress</h2>
+    <div id="worlds"></div>
+  </div>
+
+  <div class="panel">
+    <h2>⚙️ Settings</h2>
+    <label class="row"><input type="checkbox" id="setMotion"> <span>Reduce motion (fewer animations)</span></label>
+    <label class="row"><input type="checkbox" id="setContrast"> <span>High contrast mode</span></label>
+  </div>
+
   <div class="actions">
-    <a href="index.html">🏠 Back to games</a>
+    <a href="index.html">🗺️ Back to the map</a>
     <a href="stickers.html">🎁 Sticker book</a>
     <button class="danger" id="reset">🗑️ Reset progress</button>
   </div>
@@ -69,6 +86,7 @@ h1{color:#4338ca;font-size:1.5rem;margin:6px 0;text-align:center}
   Learning time counts active play in 15-second ticks and pauses when the tab is hidden.</p>
 </div>
 <script src="common.js"></script>
+<script src="data.js"></script>
 <script src="core.js"></script>
 <script>
 const s = VP.stats();
@@ -83,7 +101,9 @@ $('kpis').innerHTML = [
   ['⭐ ' + s.stars,                 'Total stars earned'],
   ['🏆 ' + s.level,                 'Current level'],
   ['🔥 ' + s.streak,                'Day streak'],
-  ['🎯 ' + s.accuracy + '%',        'Answer accuracy']
+  ['🎯 ' + s.accuracy + '%',        'Answer accuracy'],
+  ['🏅 ' + s.longestStreak,         'Longest streak'],
+  ['📚 ' + s.lessonsDone,           'Lessons completed']
 ].map(([v, l])=>'<div class="kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>').join('');
 
 // weekly bar chart (pure CSS, no library)
@@ -106,6 +126,19 @@ $('skills').innerHTML = s.skills.length
 $('insight').innerHTML =
   '<div class="good"><b>💪 Strongest skill</b><br>' + s.strongest + '</div>' +
   '<div class="work"><b>🌱 Needs practice</b><br>' + s.weakest + '</div>';
+
+// adventure world progress
+$('worlds').innerHTML = s.worlds.map(w=>
+  '<div class="wrow"><div class="t"><span>' + w.emoji + ' ' + w.name + '</span><span>' +
+  (w.unlocked ? w.done + '/' + w.lessons.length : '🔒 needs ' + w.stars + ' ⭐') + '</span></div>' +
+  '<div class="b"><i style="width:' + (w.unlocked ? w.pct : 0) + '%;background:' + w.color + '"></i></div></div>').join('');
+
+// settings
+const st = VP.s.settings;
+$('setMotion').checked = !!st.reduceMotion;
+$('setContrast').checked = !!st.highContrast;
+$('setMotion').onchange = e => VP.setSetting('reduceMotion', e.target.checked);
+$('setContrast').onchange = e => VP.setSetting('highContrast', e.target.checked);
 
 $('reset').onclick = ()=>VP.reset();
 </script>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🌍 Discover World — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#bbf7d0,#a5f3fc);display:flex;flex-direction:column;align-items:center;padding:12px 12px 92px}
+h1{color:#047857;font-size:1.4rem;margin:4px 0}
+.modes{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:780px}
+.modes button{font-size:.85rem;font-weight:bold;padding:9px 11px;border:none;border-radius:13px;background:#fff;color:#047857;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px;font-family:inherit}
+.modes button.on{background:#047857;color:#fff}
+.modes button.lock{opacity:.5}
+#meta{color:#065f46;font-size:.95rem;margin-bottom:8px;text-align:center}
+.explore{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;max-width:660px;width:100%;margin-bottom:12px}
+.ex{background:#fff;border-radius:18px;padding:12px 6px;text-align:center;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12);
+  transition:transform .15s;border:3px solid transparent}
+.ex:hover{transform:scale(1.08) rotate(-3deg);border-color:#fbbf24}
+.ex .e{font-size:2.4rem;display:block}
+.ex .n{font-weight:bold;color:#047857;font-size:.82rem;margin-top:3px;display:block;line-height:1.2}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tabs button{font-size:.9rem;font-weight:bold;padding:10px 16px;border:none;border-radius:13px;background:#fff;color:#047857;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px;font-family:inherit}
+.tabs button.on{background:#047857;color:#fff}
+</style>
+</head>
+<body>
+<h1>🌍 Discover World</h1>
+<div class="tabs">
+  <button id="tabLearn" class="on">👀 Explore</button>
+  <button id="tabQuiz">❓ Quiz</button>
+</div>
+<div class="modes" id="modes"></div>
+<div id="meta"></div>
+<div class="explore" id="explore"></div>
+<div class="q-wrap" id="quiz" style="display:none"></div>
+<script src="common.js"></script>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script>
+const T = VPContent.TOPICS;
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => a.slice().sort(()=>Math.random()-.5);
+
+const MODES = [
+  {id:'animals', label:'🦁 Animals', min:1}, {id:'birds',   label:'🦜 Birds',   min:1},
+  {id:'fruits',  label:'🍓 Fruits',  min:1}, {id:'veg',     label:'🥕 Veggies', min:2},
+  {id:'vehicles',label:'🚗 Vehicles',min:1}, {id:'ocean',   label:'🐠 Ocean',   min:1},
+  {id:'dinos',   label:'🦕 Dinos',   min:1}, {id:'space',   label:'🪐 Space',   min:1},
+  {id:'weather', label:'🌦️ Weather', min:1}, {id:'body',    label:'👋 Body',    min:2},
+  {id:'helpers', label:'👩‍🚒 Helpers', min:3}, {id:'seasons', label:'🍂 Seasons', min:2},
+  {id:'colors',  label:'🎨 Colors',  min:1}, {id:'mixed',   label:'🌍 Challenge', min:4}
+];
+
+let mode = new URLSearchParams(location.search).get('mode') || 'animals';
+if(!T[mode] && mode !== 'mixed') mode = 'animals';
+let tab = 'learn';
+
+/** Quiz generator built from whichever topic set is active. */
+function makeGen(topicId){
+  return function(a){
+    const id = topicId === 'mixed'
+      ? pick(MODES.filter(m=>m.id !== 'mixed' && VP.unlockedLevel() >= m.min).map(m=>m.id))
+      : topicId;
+    const set = T[id].items;
+    const [emoji, name, fact] = pick(set);
+    const askByName = Math.random() < .6;
+    if(askByName){
+      const wrongs = shuffle(set.filter(x=>x[1] !== name)).slice(0, a === 0 ? 2 : 3).map(x=>x[0]);
+      return {prompt:'Which one is the <b>' + name + '</b>?', answer:emoji,
+        choices: shuffle([emoji, ...wrongs]), speak:'Which one is the ' + name + '?',
+        hint:'The ' + name + ' ' + fact + '.', difficulty:'easy',
+        answerSpeak:'The ' + name + ' ' + fact + '.'};
+    }
+    const wrongs = shuffle(set.filter(x=>x[1] !== name)).slice(0,2).map(x=>x[1]);
+    return {prompt:'What is this?', visual: emoji, answer:name,
+      choices: shuffle([name, ...wrongs]), speak:'What is this?',
+      hint:'It ' + fact + '.', difficulty:'medium', answerSpeak:'It is a ' + name + '. It ' + fact + '.'};
+  };
+}
+function renderModes(){
+  const lv = VP.unlockedLevel(), box = document.getElementById('modes');
+  box.innerHTML = '';
+  MODES.forEach(m=>{
+    const locked = lv < m.min;
+    const b = document.createElement('button');
+    b.textContent = locked ? '🔒 ' + m.label.replace(/^\S+\s/,'') : m.label;
+    b.className = (m.id === mode ? 'on ' : '') + (locked ? 'lock' : '');
+    b.onclick = ()=>{
+      if(locked){ playSfx('wrong'); Mascot.say('Reach level ' + m.min + ' to unlock this one!'); return; }
+      mode = m.id; start();
+    };
+    box.appendChild(b);
+  });
+}
+function renderExplore(){
+  const id = mode === 'mixed' ? 'animals' : mode;
+  const set = T[id];
+  document.getElementById('meta').textContent = set.title + ' — tap to hear about each one!';
+  document.getElementById('explore').innerHTML = set.items.map(([e,n])=>
+    '<div class="ex" data-n="' + n + '"><span class="e">' + e + '</span><span class="n">' + n + '</span></div>').join('');
+  document.querySelectorAll('.ex').forEach(el=>{
+    el.onclick = ()=>{
+      const item = set.items.find(x=>x[1] === el.dataset.n);
+      playSfx('pop');
+      say('The ' + item[1] + ' ' + item[2] + '.');
+      el.animate([{transform:'scale(1)'},{transform:'scale(1.25) rotate(8deg)'},{transform:'scale(1)'}], {duration:450});
+    };
+  });
+}
+function start(){
+  renderModes();
+  const learn = tab === 'learn';
+  document.getElementById('explore').style.display = learn ? 'grid' : 'none';
+  document.getElementById('quiz').style.display = learn ? 'none' : 'block';
+  document.getElementById('tabLearn').classList.toggle('on', learn);
+  document.getElementById('tabQuiz').classList.toggle('on', !learn);
+  if(learn){ renderExplore(); return; }
+  const m = MODES.find(x=>x.id === mode) || MODES[0];
+  document.getElementById('meta').textContent = m.label.replace(/^\S+\s/,'') + ' quiz   •   Level ' + VP.unlockedLevel();
+  new Quiz({generate: makeGen(mode), skill:'science', track:'science', round:5, mount: document.getElementById('quiz')});
+}
+document.getElementById('tabLearn').onclick = ()=>{ tab='learn'; start(); };
+document.getElementById('tabQuiz').onclick  = ()=>{ tab='quiz';  start(); };
+start();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#a855f7">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>🧩 Brain Games — Vaanya's Playground</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif;user-select:none}
+body{min-height:100vh;background:linear-gradient(135deg,#fed7aa,#ddd6fe);display:flex;flex-direction:column;align-items:center;padding:12px 12px 92px}
+h1{color:#c2410c;font-size:1.4rem;margin:4px 0}
+.modes{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;max-width:780px}
+.modes button{font-size:.85rem;font-weight:bold;padding:9px 11px;border:none;border-radius:13px;background:#fff;color:#c2410c;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);cursor:pointer;min-height:44px;font-family:inherit}
+.modes button.on{background:#c2410c;color:#fff}
+.modes button.lock{opacity:.5}
+#meta{color:#9a3412;font-size:.95rem;margin-bottom:8px;text-align:center}
+.shadow{filter:brightness(0);opacity:.82}
+/* Simon Says */
+#simon{display:grid;grid-template-columns:repeat(2,110px);gap:14px;justify-content:center;margin:14px 0}
+#simon .pad{height:110px;border-radius:24px;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:transform .1s,filter .15s;
+  display:flex;align-items:center;justify-content:center;font-size:2.4rem}
+#simon .pad.lit{filter:brightness(1.9) saturate(1.4);transform:scale(1.07)}
+#simonMsg{font-size:1.15rem;color:#9a3412;font-weight:bold;min-height:1.7rem;text-align:center}
+#simonStart{font-family:inherit;font-size:1.1rem;font-weight:bold;padding:13px 26px;border:none;border-radius:18px;
+  background:#c2410c;color:#fff;cursor:pointer;box-shadow:0 5px 0 #7c2d12;min-height:44px}
+</style>
+</head>
+<body>
+<h1>🧩 Brain Games</h1>
+<div class="modes" id="modes"></div>
+<div id="meta"></div>
+<div class="q-wrap" id="quiz"></div>
+<div class="q-wrap" id="simonWrap" style="display:none">
+  <div id="simonMsg">Watch the colours, then tap them in the same order!</div>
+  <div id="simon"></div>
+  <div style="text-align:center"><button id="simonStart">▶ Start</button></div>
+</div>
+<script src="common.js"></script>
+<script src="data.js"></script>
+<script src="core.js"></script>
+<script>
+const rnd = n => Math.floor(Math.random()*n);
+const pick = a => a[rnd(a.length)];
+const shuffle = a => a.slice().sort(()=>Math.random()-.5);
+
+const SHAPES = {
+  circle:'<circle cx="50" cy="50" r="45" fill="COL"/>',
+  square:'<rect x="6" y="6" width="88" height="88" rx="9" fill="COL"/>',
+  triangle:'<polygon points="50,6 94,94 6,94" fill="COL"/>',
+  star:'<polygon points="50,4 62,38 98,38 69,59 79,94 50,72 21,94 31,59 2,38 38,38" fill="COL"/>',
+  heart:'<path d="M50 92 C8 58 8 25 29 18 C41 14 50 25 50 32 C50 25 59 14 71 18 C92 25 92 58 50 92Z" fill="COL"/>',
+  diamond:'<polygon points="50,4 96,50 50,96 4,50" fill="COL"/>'
+};
+const COLORS = {red:'#ef4444', blue:'#3b82f6', green:'#22c55e', yellow:'#eab308', purple:'#a855f7', orange:'#f97316'};
+const svg = (shape, color) => '<svg width="86" height="86" viewBox="0 0 100 100">' +
+  SHAPES[shape].replace('COL', COLORS[color] || color) + '</svg>';
+const OBJS = ['🐶','🐱','🦁','🐘','🚗','🌳','⭐','🍎','🎈','🐟','🦋','🌸'];
+
+const GEN = {
+  shapes(a){
+    const names = Object.keys(SHAPES), cols = Object.keys(COLORS);
+    const s = pick(names), c = pick(cols);
+    // build distinct wrong options — never repeat a shape+colour pair
+    const want = a === 0 ? 2 : 3;
+    const seen = new Set([s + '|' + c]);
+    const wrongs = [];
+    let guard = 0;
+    while(wrongs.length < want && guard++ < 200){
+      const cs = pick(names), cc = pick(cols), key = cs + '|' + cc;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      wrongs.push(svg(cs, cc));
+    }
+    return {prompt:'Find the <b>' + c + ' ' + s + '</b>', answer:svg(s,c),
+      choices: shuffle([svg(s,c), ...wrongs]), speak:'Find the ' + c + ' ' + s,
+      hint:'Look for the ' + s + ' shape in ' + c + '.', difficulty:'easy'};
+  },
+  shadow(a){
+    const t = pick(OBJS);
+    const wrongs = shuffle(OBJS.filter(x=>x !== t)).slice(0, a === 0 ? 2 : 3)
+      .map(x=>'<span class="shadow">' + x + '</span>');
+    return {prompt:'Which shadow belongs to this?', visual:t,
+      answer:'<span class="shadow">' + t + '</span>',
+      choices: shuffle(['<span class="shadow">' + t + '</span>', ...wrongs]),
+      speak:'Which shadow belongs to this picture?',
+      hint:'Look carefully at the shape and size.', difficulty:'medium'};
+  },
+  odd(a){
+    const groups = [['🍎','🍌','🍇','🍓'],['🐶','🐱','🐮','🐷'],['🚗','🚌','🚂','✈️'],
+                    ['🔴','🔵','🟢','🟡'],['⭐','🌙','☀️','🪐']];
+    const g = pick(groups), other = pick(groups.filter(x=>x !== g));
+    const odd = pick(other);
+    const same = shuffle(g).slice(0, 3);
+    return {prompt:'Which one does <b>not</b> belong?', answer:odd,
+      choices: shuffle([odd, ...same]), speak:'Which one does not belong with the others?',
+      hint:'Three of them go together. One is different.', difficulty:'medium'};
+  },
+  sequence(a){
+    const start = 1 + rnd(a === 2 ? 12 : 6);
+    const step = a === 2 ? pick([1,2,3]) : 1;
+    const seq = [start, start+step, start+step*2];
+    const ans = start + step*3;
+    const set = new Set([ans]);
+    while(set.size < 3) set.add(Math.max(0, ans + (Math.random() < .5 ? -1 : 1) * (1 + rnd(3))));
+    return {prompt:'What comes next?', visual: seq.join(', ') + ', ?', answer:ans,
+      choices: shuffle([...set]), speak:seq.join(', ') + '. What comes next?',
+      hint:'Each one goes up by ' + step + '.', difficulty:'medium'};
+  },
+  size(a){
+    const t = pick(OBJS);
+    const which = pick(['biggest','smallest']);
+    const sizes = shuffle([['1.1rem','small'],['2.2rem','middle'],['3.6rem','big']]);
+    const opts = sizes.map(([sz])=>'<span style="font-size:' + sz + '">' + t + '</span>');
+    const target = which === 'biggest' ? '<span style="font-size:3.6rem">' + t + '</span>'
+                                       : '<span style="font-size:1.1rem">' + t + '</span>';
+    return {prompt:'Which one is the <b>' + which + '</b>?', answer:target, choices:opts,
+      speak:'Which one is the ' + which + '?', hint:'Compare them carefully.', difficulty:'easy'};
+  }
+};
+GEN.mixed = a => {
+  const lv = VP.unlockedLevel();
+  const ids = MODES.filter(m=>m.id !== 'mixed' && m.id !== 'simon' && lv >= m.min).map(m=>m.id);
+  return GEN[pick(ids.length ? ids : ['shapes'])](a);
+};
+
+const MODES = [
+  {id:'shapes',   label:'🔷 Shapes',   min:1}, {id:'shadow',  label:'👤 Shadows',  min:2},
+  {id:'odd',      label:'🔍 Odd One',  min:2}, {id:'size',    label:'📐 Sizes',    min:2},
+  {id:'sequence', label:'🔢 Sequence', min:3}, {id:'simon',   label:'🎼 Simon Says', min:3},
+  {id:'mixed',    label:'🧠 Challenge',min:4}
+];
+
+let mode = new URLSearchParams(location.search).get('mode') || 'shapes';
+if(!GEN[mode] && mode !== 'simon') mode = 'shapes';
+
+/* ---------- Simon Says (its own mini-game, not a quiz) ---------- */
+const SIMON_PADS = [['#ef4444','🔴',330],['#3b82f6','🔵',392],['#22c55e','🟢',466],['#eab308','🟡',523]];
+let seq = [], step = 0, playing = false;
+function buildSimon(){
+  document.getElementById('simon').innerHTML = SIMON_PADS.map((p,i)=>
+    '<div class="pad" data-i="' + i + '" style="background:' + p[0] + '" role="button" aria-label="pad ' + (i+1) + '"></div>').join('');
+  document.querySelectorAll('#simon .pad').forEach(el=>{
+    el.onclick = ()=>{ if(playing) tapPad(+el.dataset.i); };
+  });
+}
+function litPad(i, ms){
+  const el = document.querySelector('#simon .pad[data-i="' + i + '"]');
+  if(!el) return;
+  el.classList.add('lit');
+  const a = ac2();
+  if(a){
+    const o = a.createOscillator(), g = a.createGain();
+    o.frequency.value = SIMON_PADS[i][2]; o.type = 'sine';
+    g.gain.setValueAtTime(.0001, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.2, a.currentTime + .02);
+    g.gain.exponentialRampToValueAtTime(.0001, a.currentTime + ms/1000);
+    o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + ms/1000 + .05);
+  }
+  setTimeout(()=>el.classList.remove('lit'), ms);
+}
+let _ac;
+function ac2(){ try{ if(!_ac) _ac = new (window.AudioContext||window.webkitAudioContext)(); if(_ac.state==='suspended')_ac.resume(); return _ac; }catch(e){ return null; } }
+function playSeq(){
+  playing = false; step = 0;
+  document.getElementById('simonMsg').textContent = '👀 Watch carefully...';
+  seq.forEach((v,i)=>setTimeout(()=>litPad(v, 420), i * 620));
+  setTimeout(()=>{
+    playing = true;
+    document.getElementById('simonMsg').textContent = '👆 Your turn! Tap ' + seq.length + ' in order.';
+    say('Your turn!');
+  }, seq.length * 620 + 200);
+}
+function tapPad(i){
+  litPad(i, 240);
+  if(i === seq[step]){
+    step++;
+    if(step === seq.length){
+      playing = false;
+      VP.correct({difficulty: seq.length >= 5 ? 'hard' : 'medium', skill:'logic', track:'logic'});
+      document.getElementById('simonMsg').textContent = '🎉 ' + VP.praise() + ' Round ' + seq.length + ' done!';
+      say(VP.praise());
+      if(seq.length >= 6){
+        VP.finishRound({perfect:true, track:'logic', title:'SIMON MASTER! 🏆'});
+        seq = [];
+        setTimeout(newSimon, 1600);
+      }else{
+        setTimeout(()=>{ seq.push(rnd(4)); playSeq(); }, 1400);
+      }
+    }
+  }else{
+    playing = false;
+    playSfx('wrong'); VP.wrong({skill:'logic'});
+    document.getElementById('simonMsg').textContent = VP.encourage();
+    say(VP.encourage());
+    Mascot.cheer();
+    setTimeout(()=>{ step = 0; playSeq(); }, 1500);
+  }
+}
+function newSimon(){
+  seq = [rnd(4), rnd(4)];
+  document.getElementById('simonMsg').textContent = 'Watch the colours, then tap them in the same order!';
+}
+
+function renderModes(){
+  const lv = VP.unlockedLevel(), box = document.getElementById('modes');
+  box.innerHTML = '';
+  MODES.forEach(m=>{
+    const locked = lv < m.min;
+    const b = document.createElement('button');
+    b.textContent = locked ? '🔒 ' + m.label.replace(/^\S+\s/,'') : m.label;
+    b.className = (m.id === mode ? 'on ' : '') + (locked ? 'lock' : '');
+    b.onclick = ()=>{
+      if(locked){ playSfx('wrong'); Mascot.say('Reach level ' + m.min + ' to unlock this one!'); return; }
+      mode = m.id; start();
+    };
+    box.appendChild(b);
+  });
+}
+function start(){
+  renderModes();
+  const m = MODES.find(x=>x.id === mode) || MODES[0];
+  const isSimon = mode === 'simon';
+  document.getElementById('quiz').style.display = isSimon ? 'none' : 'block';
+  document.getElementById('simonWrap').style.display = isSimon ? 'block' : 'none';
+  document.getElementById('meta').textContent = m.label.replace(/^\S+\s/,'') + '   •   Level ' + VP.unlockedLevel();
+  if(isSimon){ buildSimon(); newSimon(); return; }
+  new Quiz({generate: GEN[mode], skill:'logic', track:'logic', round:5, mount: document.getElementById('quiz')});
+}
+document.getElementById('simonStart').onclick = ()=>{ if(!seq.length) newSimon(); playSeq(); };
+start();
+</script>
+<script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</body>
+</html>

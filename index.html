@@ -6,79 +6,83 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#a855f7">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Vaanya's Playground 🎪 — Learn & Play!</title>
-<meta name="description" content="A free, safe learning platform for kids 3-7 — maths, letters, shapes, memory and patterns with levels, stars and stickers. No ads, no tracking.">
+<title>Vaanya's Playground 🎪 — Learning Adventure</title>
+<meta name="description" content="A free, safe learning adventure for kids 3-7 — maths, letters, science, memory and art across seven worlds. No ads, no tracking.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Comic Sans MS','Chalkboard SE',cursive,sans-serif}
-body{min-height:100vh;background:linear-gradient(135deg,#ffe29f,#ffa99f 40%,#c2a8fd);display:flex;flex-direction:column;align-items:center;padding:16px 14px 40px}
-h1{font-size:clamp(1.8rem,6.5vw,3rem);color:#7c3aed;text-shadow:3px 3px 0 #fff;margin:6px 0;text-align:center}
-.sub{color:#6b21a8;font-size:1.05rem;margin-bottom:14px;text-align:center;font-weight:bold}
-.wrap{width:100%;max-width:860px}
-.panel{background:rgba(255,255,255,.88);border-radius:26px;padding:18px;margin-bottom:16px;box-shadow:0 6px 20px rgba(0,0,0,.1)}
-.panel h2{color:#7c3aed;font-size:1.2rem;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-/* --- level / xp --- */
-.lvline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.lvbadge{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;border-radius:18px;padding:10px 16px;font-weight:bold;font-size:1.1rem}
-.xpbar{flex:1;min-width:140px;height:22px;background:#ede9fe;border-radius:99px;overflow:hidden;position:relative}
-.xpbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#facc15,#f97316,#ec4899);
-  transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
-.xpbar span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:bold;color:#5b21b6}
-.statrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.stat{background:#f3e8ff;border-radius:14px;padding:8px 14px;color:#6b21a8;font-weight:bold;font-size:.95rem}
-/* --- challenges --- */
-.chal{display:flex;align-items:center;gap:12px;background:#fff;border-radius:16px;padding:10px 14px;margin-bottom:8px;border:3px solid #ede9fe}
+body{min-height:100vh;background:linear-gradient(180deg,#a5d8ff 0%,#c3f0ca 45%,#ffe8a3 100%);
+  display:flex;flex-direction:column;align-items:center;padding:14px 12px 90px}
+h1{font-size:clamp(1.6rem,6vw,2.6rem);color:#7c3aed;text-shadow:3px 3px 0 #fff;text-align:center;margin:4px 0}
+.sub{color:#5b21b6;font-weight:bold;text-align:center;margin-bottom:12px;font-size:1rem}
+.wrap{width:100%;max-width:780px}
+.panel{background:rgba(255,255,255,.9);border-radius:24px;padding:16px;margin-bottom:14px;box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.panel h2{color:#7c3aed;font-size:1.1rem;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+/* level strip */
+.lvline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lvbadge{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;border-radius:16px;padding:9px 14px;font-weight:bold}
+.xpbar{flex:1;min-width:130px;height:20px;background:#ede9fe;border-radius:99px;overflow:hidden;position:relative}
+.xpbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#facc15,#f97316,#ec4899);transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.xpbar span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:bold;color:#5b21b6}
+.statrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.stat{background:#f3e8ff;border-radius:12px;padding:7px 12px;color:#6b21a8;font-weight:bold;font-size:.88rem}
+/* missions */
+.chal{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:9px 12px;margin-bottom:7px;border:3px solid #ede9fe}
 .chal.done{border-color:#22c55e;background:#f0fdf4}
-.chal .ci{font-size:1.7rem}
-.chal .ct{flex:1;color:#6b21a8;font-weight:bold;font-size:.98rem}
-.chal .cb{width:100%;height:9px;background:#ede9fe;border-radius:99px;margin-top:5px;overflow:hidden}
+.chal .ci{font-size:1.5rem}
+.chal .ct{flex:1;color:#6b21a8;font-weight:bold;font-size:.93rem}
+.chal .cb{width:100%;height:8px;background:#ede9fe;border-radius:99px;margin-top:4px;overflow:hidden}
 .chal .cb i{display:block;height:100%;background:#a855f7;border-radius:99px;transition:width .6s}
-.chal .cn{color:#a855f7;font-weight:bold;font-size:.9rem;white-space:nowrap}
-/* --- learning path --- */
-.path{position:relative;padding-left:6px}
-.stage{display:flex;gap:14px;align-items:flex-start;margin-bottom:6px}
-.rail{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
-.rail .dot{width:34px;height:34px;border-radius:50%;background:#a855f7;color:#fff;display:flex;align-items:center;justify-content:center;
-  font-weight:bold;font-size:.95rem;box-shadow:0 3px 0 rgba(0,0,0,.15)}
-.rail .dot.lock{background:#cbd5e1}
-.rail .line{flex:1;width:5px;background:#ddd6fe;min-height:26px;border-radius:99px}
-.stagebody{flex:1;padding-bottom:14px}
-.stagebody h3{color:#6b21a8;font-size:1.05rem;margin-bottom:2px}
-.stagebody .skills{color:#9333ea;font-size:.82rem;margin-bottom:8px}
-.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
-.card{background:#fff;border-radius:20px;padding:14px 8px;text-align:center;text-decoration:none;
-  box-shadow:0 5px 0 rgba(0,0,0,.12);border:4px solid transparent;transition:transform .15s;display:block}
-.card:hover{transform:scale(1.06) rotate(-1.5deg);border-color:#fbbf24}
-.card .emoji{font-size:2.5rem;display:block}
-.card .name{display:block;font-size:1rem;font-weight:bold;color:#7c3aed;margin-top:4px;line-height:1.2}
-.card .desc{display:block;font-size:.75rem;color:#9333ea;margin-top:2px;line-height:1.2}
-.card.locked{filter:grayscale(1);opacity:.55;cursor:not-allowed}
-.pcta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
-.pcta a{background:#fff;border-radius:18px;padding:12px 18px;text-decoration:none;color:#7c3aed;font-weight:bold;
-  box-shadow:0 4px 0 rgba(0,0,0,.12);font-size:.95rem}
-.tip{background:rgba(255,255,255,.72);padding:10px 16px;border-radius:16px;color:#6b21a8;font-size:.9rem;text-align:center;margin-top:6px}
-footer{margin-top:16px;color:#7c3aed;font-size:.82rem;text-align:center}
-/* --- name overlay --- */
+.chal .cn{color:#a855f7;font-weight:bold;font-size:.85rem;white-space:nowrap}
+/* ---- ADVENTURE MAP ---- */
+.map{position:relative;padding:6px 0}
+.world{display:flex;gap:14px;align-items:flex-start;position:relative}
+.rail{display:flex;flex-direction:column;align-items:center;width:66px;flex-shrink:0}
+.orb{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;
+  box-shadow:0 6px 0 rgba(0,0,0,.18);position:relative;transition:transform .25s;background:#cbd5e1}
+.orb.open{animation:orbFloat 2.6s ease-in-out infinite}
+.world.unlocked .orb{cursor:pointer}
+.world.unlocked:hover .orb{transform:scale(1.1) rotate(-5deg)}
+@keyframes orbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.orb .ring{position:absolute;inset:-7px;border-radius:50%;border:4px dashed rgba(255,255,255,.85);animation:spin 12s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.path{width:7px;flex:1;min-height:34px;border-radius:99px;background:repeating-linear-gradient(180deg,#fff 0 9px,transparent 9px 18px);opacity:.85}
+.wbody{flex:1;padding-bottom:16px;min-width:0}
+.wcard{background:#fff;border-radius:22px;padding:14px;box-shadow:0 5px 0 rgba(0,0,0,.1);transition:transform .2s;border:4px solid transparent}
+.world.unlocked .wcard{cursor:pointer}
+.world.unlocked .wcard:hover{transform:translateX(4px);border-color:#fbbf24}
+.world.locked .wcard{filter:grayscale(.75);opacity:.72}
+.wcard h3{font-size:1.15rem;margin-bottom:2px}
+.wcard .blurb{color:#64748b;font-size:.85rem;margin-bottom:8px}
+.wprog{height:13px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.wprog i{display:block;height:100%;border-radius:99px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.wmeta{display:flex;justify-content:space-between;font-size:.8rem;color:#64748b;margin-top:5px;font-weight:bold;gap:8px;flex-wrap:wrap}
+.lockmsg{color:#b45309;font-weight:bold;font-size:.88rem;display:flex;align-items:center;gap:6px}
+/* quick links */
+.quick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.quick a{background:#fff;border-radius:16px;padding:11px 15px;text-decoration:none;color:#7c3aed;font-weight:bold;
+  box-shadow:0 4px 0 rgba(0,0,0,.12);font-size:.9rem;min-height:44px;display:flex;align-items:center}
+footer{color:#5b21b6;font-size:.8rem;text-align:center;margin-top:8px}
+/* name overlay */
 #ov{position:fixed;inset:0;background:rgba(124,58,237,.55);display:flex;align-items:center;justify-content:center;z-index:970;padding:16px}
 #ov.hide{display:none}
-.box{background:#fff;border-radius:28px;padding:32px 28px;text-align:center;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)}
-.box .wave{font-size:3.2rem}
-.box h2{color:#7c3aed;margin:10px 0 16px;font-size:1.4rem}
-.box input{width:100%;font-size:1.25rem;padding:12px;border:3px solid #c4b5fd;border-radius:16px;text-align:center;outline:none;font-family:inherit}
+.box{background:#fff;border-radius:28px;padding:30px 26px;text-align:center;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.box .wave{font-size:3.4rem;animation:vpBounce 1s infinite alternate}
+.box h2{color:#7c3aed;margin:8px 0 14px;font-size:1.35rem}
+.box input{width:100%;font-size:1.2rem;padding:12px;border:3px solid #c4b5fd;border-radius:16px;text-align:center;outline:none;font-family:inherit}
 .box input:focus{border-color:#7c3aed}
-.box button{margin-top:14px;width:100%;font-size:1.2rem;font-weight:bold;padding:14px;border:none;border-radius:16px;
+.box button{margin-top:14px;width:100%;font-size:1.15rem;font-weight:bold;padding:14px;border:none;border-radius:16px;
   background:#7c3aed;color:#fff;cursor:pointer;box-shadow:0 5px 0 #5b21b6;font-family:inherit}
 .box button:active{transform:translateY(3px);box-shadow:none}
-#edit{position:fixed;top:64px;right:12px;font-size:1.2rem;background:#fff;border:none;border-radius:50%;width:44px;height:44px;
+#edit{position:fixed;top:64px;right:12px;font-size:1.1rem;background:#fff;border:none;border-radius:50%;width:42px;height:42px;
   box-shadow:0 4px 0 rgba(0,0,0,.15);cursor:pointer;z-index:800}
 </style>
 </head>
 <body>
 <button id="edit" title="Change name" aria-label="Change name">✏️</button>
 <h1 id="title">🎪 Vaanya's Playground</h1>
-<p class="sub" id="greet">Learn and play — earn stars, level up, collect stickers! ✨</p>
+<p class="sub" id="greet">Your learning adventure! 🗺️</p>
 
 <div class="wrap">
-  <!-- Level & XP -->
   <div class="panel">
     <div class="lvline">
       <span class="lvbadge" id="lvBadge">Level 1</span>
@@ -87,111 +91,119 @@ footer{margin-top:16px;color:#7c3aed;font-size:.82rem;text-align:center}
     <div class="statrow" id="statRow"></div>
   </div>
 
-  <!-- Daily challenges -->
   <div class="panel">
-    <h2>🎯 Today's Challenges <span style="font-size:.8rem;color:#a855f7;font-weight:normal">resets every day</span></h2>
+    <h2>🎯 Today's Missions <span style="font-size:.78rem;color:#a855f7;font-weight:normal">new every day</span></h2>
     <div id="chalBox"></div>
   </div>
 
-  <!-- Learning path -->
   <div class="panel">
-    <h2>🗺️ Your Learning Path <span id="pathPct" style="font-size:.9rem;color:#a855f7"></span></h2>
-    <div class="path" id="path"></div>
+    <h2>🗺️ Adventure Map <span id="mapPct" style="font-size:.85rem;color:#a855f7"></span></h2>
+    <div class="map" id="map"></div>
   </div>
 
-  <div class="pcta">
+  <div class="quick">
     <a href="stickers.html">🎁 Sticker Book</a>
     <a href="parents.html">👨‍👩‍👧 For Parents</a>
+    <a href="paint.html">🎨 Free Draw</a>
   </div>
-  <p class="tip">💡 Parent tip: press <b>F11</b> for fullscreen, and turn the sound on 🔊 — every game talks!</p>
   <footer>Made with ❤️ for Vaanya — and for your little one too.<br>No ads · No personal tracking · Free forever</footer>
 </div>
 
 <div id="ov" class="hide">
   <div class="box">
-    <div class="wave">👋</div>
-    <h2>What's your name?</h2>
+    <div class="wave">🦊</div>
+    <h2>Hi! I'm Foxy.<br>What's your name?</h2>
     <input id="nm" placeholder="Type your name" maxlength="20" autocomplete="off" aria-label="Your name">
-    <button id="go">▶ Let's Play!</button>
+    <button id="go">▶ Let's Explore!</button>
   </div>
 </div>
 
 <script src="common.js"></script>
+<script src="data.js"></script>
 <script src="core.js"></script>
 <script>
-/* --------- Learning path: which games belong to which level --------- */
-const PATH = [
-  {level:1, title:'Level 1 · Little Explorer', skills:'Numbers 1-5 · Counting objects · Matching colors',
-   games:[['counting.html','🔢','Count With Me','Count and pick!'],
-          ['shapes.html','🔺','Shape Hunt','Shapes & colors'],
-          ['animals.html','🦁','Animal Friends','Sounds & names']]},
-  {level:2, title:'Level 2 · Bright Spark', skills:'Numbers 1-10 · Easy addition · Shape recognition',
-   games:[['math.html','➕','Maths Fun','Add & count'],
-          ['balloons.html','🎈','Balloon Pop','Letters & numbers'],
-          ['patterns.html','🔁','Pattern Party','What comes next?']]},
-  {level:3, title:'Level 3 · Clever Cub', skills:'Numbers 1-20 · Addition to 10 · Memory games',
-   games:[['memory.html','🧠','Memory Match','Find the pairs'],
-          ['math.html','❓','Missing Number','__ + 3 = 8'],
-          ['letters.html','🔤','Letter Pops','A for Apple']]},
-  {level:4, title:'Level 4 · Smart Star', skills:'Addition & subtraction · Alphabet matching · Simple spelling',
-   games:[['math.html','➖','Subtraction','9 − 4 = ?'],
-          ['letters.html','🔠','Spell It','Spell CAT'],
-          ['paint.html','🎨','Finger Paint','Draw & sticker']]},
-  {level:5, title:'Level 5 · Super Genius', skills:'Word building · Skip counting · Pattern recognition',
-   games:[['patterns.html','🔢','Skip Counting','2, 4, 6, 8...'],
-          ['math.html','✖️','Times Tables','Simple multiply'],
-          ['letters.html','📚','Word Building','Big words!']]}
-];
-
 const $ = id => document.getElementById(id);
 
 function refreshName(){
   const n = kidName();
   $('title').textContent = '🎪 ' + (n ? n + "'s" : "Vaanya's") + ' Playground';
-  $('greet').textContent = (n ? 'Hi ' + n + '! ' : '') + 'Earn stars, level up, collect stickers! ✨';
+  $('greet').textContent = (n ? 'Hi ' + n + '! ' : '') + 'Your learning adventure! 🗺️';
 }
 function refreshLevel(){
   const i = VP.levelInfo(), s = VP.s;
   $('lvBadge').textContent = 'Level ' + i.cur.n + ' · ' + i.cur.name;
-  setTimeout(()=>{ $('xpFill').style.width = i.pct + '%'; }, 120);
+  setTimeout(()=>{ $('xpFill').style.width = i.pct + '%'; }, 140);
   $('xpText').textContent = i.next ? (s.xp + ' / ' + i.next.xp + ' XP') : (s.xp + ' XP · MAX!');
   $('statRow').innerHTML =
-    '<span class="stat">⭐ ' + s.stars + ' stars</span>' +
+    '<span class="stat">⭐ ' + s.stars + '</span>' +
     '<span class="stat">🔥 ' + s.streak + ' day streak</span>' +
-    '<span class="stat">🏅 ' + s.achievements.length + '/' + VPData.ACHIEVEMENTS.length + ' badges</span>' +
-    '<span class="stat">🎁 ' + s.stickers.length + '/' + VPData.ALL_STICKERS.length + ' stickers</span>';
+    '<span class="stat">🏅 ' + s.achievements.length + '/' + VPData.ACHIEVEMENTS.length + '</span>' +
+    '<span class="stat">🎁 ' + s.stickers.length + '/' + VPData.ALL_STICKERS.length + '</span>';
 }
-function refreshChallenges(){
-  const box = $('chalBox');
-  box.innerHTML = VP.s.challenges.list.map(c=>{
-    const done = c.done >= c.goal;
-    const pct = Math.round(c.done / c.goal * 100);
-    return '<div class="chal' + (done ? ' done' : '') + '">' +
-      '<span class="ci">' + (done ? '✅' : c.icon) + '</span>' +
+function refreshMissions(){
+  $('chalBox').innerHTML = VP.s.challenges.list.map(c=>{
+    const done = c.done >= c.goal, pct = Math.round(c.done / c.goal * 100);
+    return '<div class="chal' + (done ? ' done' : '') + '"><span class="ci">' + (done ? '✅' : c.icon) + '</span>' +
       '<span class="ct">' + c.text + '<span class="cb"><i style="width:' + pct + '%"></i></span></span>' +
       '<span class="cn">' + c.done + '/' + c.goal + '</span></div>';
   }).join('') + (VP.s.challenges.claimed
-      ? '<p style="color:#16a34a;font-weight:bold;text-align:center;margin-top:6px">🎁 All done today! +30 stars earned</p>'
-      : '<p style="color:#a855f7;text-align:center;font-size:.85rem;margin-top:6px">Finish all three for a 🎁 30-star bonus!</p>');
+    ? '<p style="color:#16a34a;font-weight:bold;text-align:center;margin-top:5px">🎁 All done! +30 stars earned</p>'
+    : '<p style="color:#a855f7;text-align:center;font-size:.83rem;margin-top:5px">Finish all three for a 🎁 30-star bonus!</p>');
 }
-function refreshPath(){
-  const unlocked = VP.unlockedLevel();
-  $('pathPct').textContent = '· ' + Math.round(unlocked / PATH.length * 100) + '% unlocked';
-  $('path').innerHTML = PATH.map((st, idx)=>{
-    const locked = st.level > unlocked;
-    const games = st.games.map(([href, emoji, name, desc])=>
-      locked
-        ? '<span class="card locked" aria-disabled="true"><span class="emoji">🔒</span><span class="name">' + name + '</span><span class="desc">Level ' + st.level + '</span></span>'
-        : '<a class="card" href="' + href + '"><span class="emoji">' + emoji + '</span><span class="name">' + name + '</span><span class="desc">' + desc + '</span></a>'
-    ).join('');
-    return '<div class="stage">' +
-      '<div class="rail"><div class="dot' + (locked ? ' lock' : '') + '">' + (locked ? '🔒' : st.level) + '</div>' +
-      (idx < PATH.length - 1 ? '<div class="line"></div>' : '') + '</div>' +
-      '<div class="stagebody"><h3>' + st.title + '</h3><div class="skills">' + st.skills + '</div>' +
-      '<div class="games">' + games + '</div></div></div>';
+
+/* --------- the adventure map --------- */
+function refreshMap(){
+  const worlds = VP.worlds();
+  const open = worlds.filter(w=>w.unlocked).length;
+  $('mapPct').textContent = '· ' + open + ' of ' + worlds.length + ' worlds open';
+
+  $('map').innerHTML = worlds.map((w, i)=>{
+    const last = i === worlds.length - 1;
+    const need = w.stars - VP.s.stars;
+    const body = w.unlocked
+      ? '<h3 style="color:' + w.color + '">' + w.name + '</h3>' +
+        '<div class="blurb">' + w.blurb + '</div>' +
+        '<div class="wprog"><i style="width:' + w.pct + '%;background:' + w.color + '"></i></div>' +
+        '<div class="wmeta"><span>' + w.done + ' / ' + w.lessons.length + ' lessons</span>' +
+        '<span>' + (w.pct === 100 ? '🏆 Complete!' : w.pct + '%') + '</span></div>'
+      : '<h3 style="color:#64748b">' + w.name + '</h3>' +
+        '<div class="blurb">' + w.blurb + '</div>' +
+        '<div class="lockmsg">🔒 Earn ' + need + ' more ⭐ to unlock</div>';
+    return '<div class="world ' + (w.unlocked ? 'unlocked' : 'locked') + '" data-id="' + w.id + '">' +
+      '<div class="rail"><div class="orb' + (w.unlocked ? ' open' : '') + '" style="' +
+        (w.unlocked ? 'background:' + w.color : '') + '">' + (w.unlocked ? w.emoji : '🔒') +
+        (w.unlocked ? '<span class="ring"></span>' : '') + '</div>' +
+        (last ? '' : '<div class="path"></div>') + '</div>' +
+      '<div class="wbody"><div class="wcard">' + body + '</div></div></div>';
   }).join('');
+
+  document.querySelectorAll('.world.unlocked').forEach(el=>{
+    el.onclick = ()=>{ playSfx('click'); location.href = 'world.html?w=' + el.dataset.id; };
+  });
+  document.querySelectorAll('.world.locked').forEach(el=>{
+    el.onclick = ()=>{
+      playSfx('wrong');
+      const w = worlds.find(x=>x.id === el.dataset.id);
+      Mascot.say('Keep playing to earn ' + (w.stars - VP.s.stars) + ' more stars and open ' + w.name + '!');
+    };
+  });
+
+  /* celebrate a world that opened since the last visit */
+  let seen = [];
+  try{ seen = JSON.parse(localStorage.getItem('vp.seenWorlds') || '[]'); }catch(e){}
+  const newly = worlds.filter(w=>w.unlocked && !seen.includes(w.id));
+  if(newly.length){
+    const w = newly[newly.length - 1];
+    if(seen.length){
+      setTimeout(()=>{
+        VPCelebrate.show('NEW WORLD UNLOCKED!<br>' + w.emoji + ' ' + w.name, null, w.emoji);
+        say('Wow! You unlocked ' + w.name + '! Let us go and explore!');
+      }, 700);
+    }
+    try{ localStorage.setItem('vp.seenWorlds', JSON.stringify(worlds.filter(x=>x.unlocked).map(x=>x.id))); }catch(e){}
+  }
 }
-function refreshAll(){ refreshName(); refreshLevel(); refreshChallenges(); refreshPath(); }
+function refreshAll(){ refreshName(); refreshLevel(); refreshMissions(); refreshMap(); }
 
 /* --------- name overlay --------- */
 function openOv(){ $('ov').classList.remove('hide'); $('nm').value = kidName(); $('nm').focus(); }
@@ -200,8 +212,7 @@ function closeOv(){
   if(n) setKidName(n.charAt(0).toUpperCase() + n.slice(1));
   $('ov').classList.add('hide');
   refreshAll();
-  const nm = kidName();
-  say(nm ? 'Hi ' + nm + '! Welcome to your playground! Pick a game!' : 'Welcome! Pick a game!');
+  setTimeout(()=>Mascot.say("Hi " + (kidName() || 'friend') + "! I'm Foxy. Pick a world and let's learn!"), 400);
 }
 $('go').onclick = closeOv;
 $('nm').addEventListener('keydown', e=>{ if(e.key === 'Enter') closeOv(); });
@@ -209,6 +220,7 @@ $('edit').onclick = openOv;
 
 refreshAll();
 if(!kidName()) openOv();
+else setTimeout(()=>Mascot.say('Welcome back, ' + kidName() + '! Ready for an adventure?'), 900);
 </script>
 <script data-goatcounter="https://vanu.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
